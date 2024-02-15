@@ -2,7 +2,7 @@ import subprocess
 
 def read_dump1090_raw():
     # Run the dump1090 command and capture its output
-    process = subprocess.Popen(['./home/admin/dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['/home/admin/dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
     # Read output line by line
     for line in process.stdout:

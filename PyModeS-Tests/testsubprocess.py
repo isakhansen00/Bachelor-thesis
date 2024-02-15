@@ -1,4 +1,5 @@
 import subprocess
+import  pyModeS as mps
 
 def read_dump1090_raw():
     # Run the dump1090 command and capture its output
@@ -12,7 +13,12 @@ def read_dump1090_raw():
 
 def process_hex_value(hex_value):
     # Process each hexadecimal value here
+    hex_value = hex_value.strip("*;")
     print("Received ADS-B signal:", hex_value)
+    try:
+        print("NACp value: ", mps.decoder.adsb.nac_p(hex_value))
+    except RuntimeError:
+        pass
 
 if __name__ == "__main__":
     read_dump1090_raw()

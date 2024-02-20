@@ -29,6 +29,7 @@ def process_hex_values(icao_address, hex_values):
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
+            print(nac_p)
             if nac_p[0] < 4:
                 print(f"Might be currently jammed. NACp is: {nac_p[0]}")
         except RuntimeError:
@@ -36,6 +37,7 @@ def process_hex_values(icao_address, hex_values):
         
         try:
             flight_callsign = mps.adsb.callsign(hex_value)
+            print(flight_callsign)
         except RuntimeError:
             pass
 

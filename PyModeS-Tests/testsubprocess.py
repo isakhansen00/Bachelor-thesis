@@ -9,6 +9,7 @@ def read_dump1090_raw():
     
     for line in process.stdout:
         hex_value = line.strip()
+        hex_value = line.strip("*;")
         print("Received ADS-B signal:", hex_value)
         icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
         

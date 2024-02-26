@@ -24,6 +24,13 @@ while True:
                 print ( "Message successfully sent" )  
                 time.sleep(3)
             """
+            while True:  
+                msg_txt_formatted = MSG_SND.format(temperature=81, humidity=27)  
+                message = Message(msg_txt_formatted)  
+                print( "Sending message: {}".format(message) )  
+                client.send_message(message)  
+                print ( "Message successfully sent" )  
+                time.sleep(3)
         except KeyboardInterrupt:  
             print ( "IoTHubClient stopped" )  
     if __name__ == '__main__':  

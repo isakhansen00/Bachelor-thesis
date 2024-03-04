@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="center">
+    <h1 class="title1">
+        ADS-B Table
+    </h1>
+
+    <table class="table table-striped table-hover table-bordered text-center">
+        <thead>
+            <tr class="table-primary">
+                <th>ID</th>
+                <th>ICAO</th>
+                <th>Callsign</th>
+                <th>NACp</th>
+            </tr>
+        </thead>
+            {% for flight_data in flight_data_list %}
+         <tr>
+            <td>{{ flight_data.id }}</td>
+            <td>{{ flight_data.icao }}</td>
+            <td>{{ flight_data.callsign }}</td>
+            <td>{{ flight_data.nacp }}</td>
+        </tr>
+            {% endfor %}
+    </table>
+
+</div>
+
+
+{% endblock %}

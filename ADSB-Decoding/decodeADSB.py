@@ -63,9 +63,11 @@ def process_hex_values(icao_address):
         
         
         try:
-            lat, lon = mps.decoder.adsb.airborne_position(msg0, msg1, t0, t1)
-            print("Latitude:", lat)
-            print("Longitude:", lon)
+            # lat, lon = mps.decoder.adsb.airborne_position(msg0, msg1, t0, t1)
+            position = mps.adsb.position(msg0, msg1, t0, t1)
+            print(f"Position {position}")
+            # print("Latitude:", lat)
+            # print("Longitude:", lon)
         except Exception as e:
             pass
         

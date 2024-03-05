@@ -31,13 +31,15 @@ def process_hex_values(icao_address):
     nac_p = None
     latitude = None
     longitude = None
-    msg0 = hex_value
-    msg1 = hex_value
-    t0 = 0
-    t1 = 1
+    
     
     for hex_value in new_hex_values:
         hex_value = hex_value.strip("*;")
+
+        msg0 = hex_value
+        msg1 = hex_value
+        t0 = 0
+        t1 = 1
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)

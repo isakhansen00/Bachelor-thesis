@@ -6,7 +6,7 @@
         ADS-B Table
     </h1>
 
-    <table class="table table-striped table-hover table-bordered text-center">
+    <table class="table table-striped table-hover table-bordered text-center" id="flightTable">
         <thead>
             <tr class="table-primary">
                 <th>ID</th>
@@ -15,17 +15,47 @@
                 <th>NACp</th>
             </tr>
         </thead>
-            {% for flight_data in flight_data_list %}
-         <tr>
-            <td>{{ flight_data.id }}</td>
-            <td>{{ flight_data.icao }}</td>
-            <td>{{ flight_data.callsign }}</td>
-            <td>{{ flight_data.nacp }}</td>
-        </tr>
-            {% endfor %}
+        {% for flight_data in flight_data_list %}
+            <tr data-toggle="modal" data-target="#exampleModalCenter" data-flight-id="{{ flight_data.id }}">
+                <td>{{ flight_data.id }}</td>
+                <td>{{ flight_data.icao }}</td>
+                <td>{{ flight_data.callsign }}</td>
+                <td>{{ flight_data.nacp }}</td>
+            </tr>
+        {% endfor %}
     </table>
 
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="singleFlight" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Flight Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="modalFlightDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var modal = document.getElementById("singleFlight")
+    // JavaScript to handle click event on table row and display modal with flight details
+    window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
 
 {% endblock %}

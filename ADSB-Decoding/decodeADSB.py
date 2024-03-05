@@ -48,9 +48,7 @@ def process_hex_values(icao_address):
             pass
 
         try:
-            decoded_message = mps.parse_adsb_message(hex_value)
-            latitude = decoded_message["latitude"]
-            longitude = decoded_message["longitude"]
+            latitude, longitude = mps.adsb.position(hex_value)
             print(f"Position is: {latitude}, {longitude}")
         except RuntimeError:
             pass

@@ -31,6 +31,10 @@ def process_hex_values(icao_address):
     nac_p = None
     latitude = None
     longitude = None
+    msg0 = hex_value
+    msg1 = hex_value
+    t0 = 0
+    t1 = 1
     
     for hex_value in new_hex_values:
         hex_value = hex_value.strip("*;")
@@ -54,7 +58,15 @@ def process_hex_values(icao_address):
         except RuntimeError:
             pass
             """
-    
+        
+        if msg0 and msg1:
+            try:
+                lat, lon = mps.decoder.adsb.airborne_position(msg0, msg1, t0, t1)
+                print("Latitude:", lat)
+                print("Longitude:", lon)
+            except Exception as e:
+                pass
+        
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
         message_data = {

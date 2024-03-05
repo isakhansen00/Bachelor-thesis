@@ -6,7 +6,7 @@
         ADS-B Table
     </h1>
 
-    <table class="table table-striped table-hover table-bordered text-center">
+    <table id="flight-table" class="table table-striped table-hover table-bordered text-center">
         <thead>
             <tr class="table-primary">
                 <th>ID</th>
@@ -49,6 +49,34 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   $(document).ready(function() {
+
+          // WebSocket connection
+          var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+          // Handle WebSocket events for new flight data
+          socket.on('new_flight_data', function(data) {
+              const flightId = data.id;
+              const flightIcao = data.icao;
+              const flightCallsign = data.callsign;
+              const flightNacp = data.nacp;
+    
+              const newRow = `<tr data-flight-id="${flightId}" data-flight-icao="${flightIcao}" 
+                             data-flight-callsign="${flightCallsign}" data-flight-nacp="${flightNacp}">
+                                 <td>${flightId}</td>
+                                 <td>${flightIcao}</td>
+                                 <td>${flightCallsign}</td>
+                                 <td>${flightNacp}</td>
+                             </tr>`;
+    
+              $('#flight-table tbody').append(newRow);
+          });
+    
+          // Handle WebSocket events for NACp alerts
+          socket.on('nacp_alert', function(data) {
+              // Display alert for flights with NACp value below threshold
+              alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
+          });
+
       $('tr[data-toggle="modal"]').click(function() {
           var flightId = $(this).data('flight-id');
           var flightIcao = $(this).data('flight-icao');

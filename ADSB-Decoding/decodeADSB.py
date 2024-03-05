@@ -29,8 +29,6 @@ def process_hex_values(icao_address):
     
     flight_callsign = None
     nac_p = None
-    latitude = None
-    longitude = None
     
     for hex_value in new_hex_values:
         hex_value = hex_value.strip("*;")
@@ -46,15 +44,7 @@ def process_hex_values(icao_address):
             flight_callsign = mps.adsb.callsign(hex_value)
         except RuntimeError:
             pass
-
-        """
-        try:
-            latitude, longitude = mps.adsb.position(hex_value)
-            print(f"Position is: {latitude}, {longitude}")
-        except RuntimeError:
-            pass
-            """
-    
+        
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
         message_data = {

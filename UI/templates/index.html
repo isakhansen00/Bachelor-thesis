@@ -15,43 +15,52 @@
                 <th>NACp</th>
             </tr>
         </thead>
-            {% for flight_data in flight_data_list %}
-         <tr data-target="#myModal" data-toggle="modal">
+        {% for flight_data in flight_data_list %}
+        <tr data-toggle="modal" data-target="#myModal" 
+        data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
+        data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
             <td>{{ flight_data.id }}</td>
             <td>{{ flight_data.icao }}</td>
             <td>{{ flight_data.callsign }}</td>
             <td>{{ flight_data.nacp }}</td>
         </tr>
-            {% endfor %}
+        {% endfor %}
     </table>
-
 </div>
-
 
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Modal Header</h4>
-      </div>
-      <div class="modal-body">
-        <p>Some text in the modal.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Flight Details</h4>
+            </div>
+            <div class="modal-body">
+              <p><strong>ID:</strong> <span id="data-flight-id"></span></p>
+              <p><strong>ICAO:</strong> <span id="data-flight-icao"></span></p>
+              <p><strong>Callsign:</strong> <span id="data-flight-callsign"></span></p>
+              <p><strong>NACp:</strong> <span id="data-flight-nacp"></span></p>                         
+            </div>
+        </div>
     </div>
-
-  </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $('#myModal').on('shown.bs.modal', function () {
-        $('#myInput').trigger('focus');
-    });
+  $(document).ready(function() {
+      $('tr[data-toggle="modal"]').click(function() {
+          var flightId = $(this).data('flight-id');
+          var flightIcao = $(this).data('flight-icao');
+          var flightCallsign = $(this).data('flight-callsign');
+          var flightNacp = $(this).data('flight-nacp');
+          
+          $('#myModal #data-flight-id').text(flightId);
+          $('#myModal #data-flight-icao').text(flightIcao);
+          $('#myModal #data-flight-callsign').text(flightCallsign);
+          $('#myModal #data-flight-nacp').text(flightNacp);
+      });
+  });
 </script>
 
 {% endblock %}

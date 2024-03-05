@@ -10,9 +10,8 @@ db = pyodbc.connect('DRIVER=' + driver + ';SERVER=' +
     ';UID=' + username + ';PWD=' + password)
 
 cursor = db.cursor()
-cursor.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID")
+cursor.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID DESC")
 rows = cursor.fetchall()
-
 
 flight_data_list = []
 for row in rows:

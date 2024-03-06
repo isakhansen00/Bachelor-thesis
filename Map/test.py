@@ -25,11 +25,16 @@ def read_dump1090_raw():
             if len(hex_values_dict[icao_address]) >= 2:
                 msg0 = hex_values_dict[icao_address][-2]
                 msg1 = hex_values_dict[icao_address][-1]
-                position = mps.decoder.adsb.position(msg0, msg1, 0, 0)  # Assuming timestamps are not used here
-                if position is not None:
-                    latitude, longitude = position
-                    print("Latitude:", latitude)
-                    print("Longitude:", longitude)
+                
+                # Check message types
+                if mps.adsb.message_type(msg0) == 9 and mps.adsb.message_type(msg1) == 9:
+                    position = mps.decoder.adsb.position(msg0, msg1, 0, 0)  # Assuming timestamps are not used here
+                    if position is not None:
+                        latitude, longitude = position
+                        print("Latitude:", latitude)
+                        print("Longitude:", longitude)
+                else:
+                    print("Invalid message types for position decoding")
     
     print(hex_values_dict)
 
@@ -37,3 +42,4 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
+

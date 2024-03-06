@@ -39,8 +39,10 @@ def process_hex_values(icao_address):
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
+            """
             if nac_p[0] < 10:
                 print(f"Potential jamming detected. NACp is: {nac_p[0]}")
+                """
         except RuntimeError:
             pass
         

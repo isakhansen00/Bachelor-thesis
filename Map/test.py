@@ -22,8 +22,8 @@ def read_dump1090_raw():
                 msg1 = hex_values_dict[icao_address][-1]
                 
                 # Extract Type Codes from the messages
-                type_code_msg0 = mps.util.typecode(msg0)
-                type_code_msg1 = mps.util.typecode(msg1)
+                type_code_msg0 = int(msg0[:5], 2)
+                type_code_msg1 = int(msg1[:5], 2)
                 
                 # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
                 if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:
@@ -53,4 +53,3 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
-

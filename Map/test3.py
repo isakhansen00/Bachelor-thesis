@@ -53,18 +53,19 @@ def process_hex_values(icao_address):
         
         if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             print("HEIA")
-            if msg_even is None:
+            if hex_value[6] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
-            elif msg_odd is None:
+            elif hex_value[6] == '1':
                 msg_odd = hex_value
                 t_odd = int(time.time())
                 
         if msg_even and msg_odd and t_even and t_odd:
-            position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
             print("HEIA2")
+            position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
+            print("HEI3")
             if position:
-                print("HEIA3")
+                print("HEIA4")
                 longitude, latitude = position
                 print(f"Longitude: {longitude}, Latitude: {latitude}")
                 # Save longitude and latitude to the database along with other information

@@ -31,7 +31,6 @@ def process_hex_values(icao_address):
     nac_p = None
     
     for hex_value in new_hex_values:
-        hex_value = hex_value.strip("*;")
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)

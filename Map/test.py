@@ -37,7 +37,7 @@ def read_dump1090_raw():
                     # Decode Compact Position Reporting (CPR) format
                     
                     # Make sure the message contains the position information
-                    if mps.adsb.position(msg0, msg1):
+                    if mps.adsb.position(msg0, msg1, 0, 1):
                         position = mps.adsb.position(msg0, msg1, 0, 1)
                         print("POSITION:", position)
                     else:
@@ -46,7 +46,7 @@ def read_dump1090_raw():
                     # Decode Compact Position Reporting (CPR) format for Type Codes 20-22
                     
                     # Make sure the message contains the position information
-                    if mps.adsb.position(msg0, msg1):
+                    if mps.adsb.position(msg0, msg1, 0, 1):
                         position = mps.adsb.position(msg0, msg1, 0, 1)
                         print("POSITION:", position)
                     else:

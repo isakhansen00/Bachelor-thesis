@@ -1,13 +1,8 @@
 import subprocess
 import pyModeS as mps
 import threading
-import json
-from azure.iot.device import IoTHubDeviceClient, Message
 
 hex_values_dict = {}
-CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
-MSG_SND = ''
-client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)  
 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
@@ -26,11 +21,23 @@ def read_dump1090_raw():
                 msg0 = hex_values_dict[icao_address][-2]
                 msg1 = hex_values_dict[icao_address][-1]
                 
-                # Check message types
-                if mps.adsb.message_type(msg0) == 9 and mps.adsb.message_type(msg1) == 9:
-                    position = mps.decoder.adsb.position(msg0, msg1, 0, 0)  # Assuming timestamps are not used here
-                    if position is not None:
-                        latitude, longitude = position
+                # Check message types (Type Code 9-18 or 20-22)
+                if mps.util.df(msg0) in range(9, 19) and mps.util.df(msg1) in range(9, 19):
+                    # Extract Compact Position Reporting (CPR) format
+                    lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
+                    lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
+                    if lat_cpr is not None and lon_cpr is not None:
+                        # Decode latitude and longitude from CPR format
+                        latitude, longitude = mps.adsb.cpr_decode(lat_cpr, lon_cpr)
+                        print("Latitude:", latitude)
+                        print("Longitude:", longitude)
+                elif mps.util.df(msg0) in range(20, 23) and mps.util.df(msg1) in range(20, 23):
+                    # Extract Compact Position Reporting (CPR) format for Type Codes 20-22
+                    lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
+                    lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
+                    if lat_cpr is not None and lon_cpr is not None:
+                        # Decode latitude and longitude from CPR format
+                        latitude, longitude = mps.adsb.cpr_decode(lat_cpr, lon_cpr)
                         print("Latitude:", latitude)
                         print("Longitude:", longitude)
                 else:
@@ -42,4 +49,3 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
-

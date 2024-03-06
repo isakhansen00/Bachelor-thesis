@@ -21,3 +21,8 @@ def read_dump1090_raw():
             hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
     
     print(hex_values_dict)
+
+if __name__ == "__main__":
+    dump_thread = threading.Thread(target=read_dump1090_raw)
+    dump_thread.start()
+    dump_thread.join()

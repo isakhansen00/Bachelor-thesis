@@ -24,6 +24,10 @@ def read_dump1090_raw():
                 # Extract the first 5 bits for the Type Code
                 type_code_msg0 = int(msg0[:5], 16)
                 type_code_msg1 = int(msg1[:5], 16)
+
+                print("Type Code Message 0:", type_code_msg0)
+                print("Type Code Message 1:", type_code_msg1)
+
                 
                 # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
                 if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:

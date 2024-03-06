@@ -37,30 +37,18 @@ def read_dump1090_raw():
                     # Decode Compact Position Reporting (CPR) format
                     
                     # Make sure the message contains the position information
-                    if mps.adsb.position_with_ref_supported(msg0, msg1):
-                        # Extract reference latitudes and longitudes
-                        lat_ref = mps.adsb.altitude(msg0)  # Using altitude as a reference for latitude
-                        lon_ref = mps.adsb.altitude(msg1)  # Using altitude as a reference for longitude
-                        
-                        # Decode Compact Position Reporting (CPR) format
-                        latitude, longitude = mps.adsb.position_with_ref(msg0, msg1, lat_ref, lon_ref)
-                        print("Latitude:", latitude)
-                        print("Longitude:", longitude)
+                    if mps.adsb.position(msg0, msg1):
+                        position = mps.adsb.position(msg0, msg1, 0, 1)
+                        print("POSITION:", position)
                     else:
                         print("Not a position message")
                 elif 20 <= type_code_msg0 <= 22 and 20 <= type_code_msg1 <= 22:
                     # Decode Compact Position Reporting (CPR) format for Type Codes 20-22
                     
                     # Make sure the message contains the position information
-                    if mps.adsb.position_with_ref_supported(msg0, msg1):
-                        # Extract reference latitudes and longitudes
-                        lat_ref = mps.adsb.altitude(msg0)  # Using altitude as a reference for latitude
-                        lon_ref = mps.adsb.altitude(msg1)  # Using altitude as a reference for longitude
-                        
-                        # Decode Compact Position Reporting (CPR) format
-                        latitude, longitude = mps.adsb.position_with_ref(msg0, msg1, lat_ref, lon_ref)
-                        print("Latitude:", latitude)
-                        print("Longitude:", longitude)
+                    if mps.adsb.position(msg0, msg1):
+                        position = mps.adsb.position(msg0, msg1, 0, 1)
+                        print("POSITION:", position)
                     else:
                         print("Not a position message")
                 else:

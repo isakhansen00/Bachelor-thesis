@@ -53,11 +53,11 @@ def process_hex_values(icao_address):
         
         if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             print("HEIA")
-            if hex_value[6] == '0':
+            if hex_value[54] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
                 print("HEIA2")
-            elif hex_value[6] == '1':
+            elif hex_value[54] == '1':
                 msg_odd = hex_value
                 t_odd = int(time.time())
                 print("HEI3")

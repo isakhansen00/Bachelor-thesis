@@ -46,20 +46,21 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
 <script>
-  $(document).ready(function() {
-
-          // WebSocket connection
-          var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-          // Handle WebSocket events for new flight data
-          socket.on('new_flight_data', function(data) {
-              const flightId = data.id;
-              const flightIcao = data.icao;
-              const flightCallsign = data.callsign;
-              const flightNacp = data.nacp;
+    $(document).ready(function() {
+        // WebSocket connection for new flight data
+        var socket = io.connect("http://" + document.domain + ":" + location.port);
     
-              const newRow = `<tr data-flight-id="${flightId}" data-flight-icao="${flightIcao}" 
+        // Handle WebSocket events for new flight data
+        socket.on('new_flight_data', function(data) {
+            const flightId = data.id;
+            const flightIcao = data.icao;
+            const flightCallsign = data.callsign;
+            const flightNacp = data.nacp;
+    
+            const newRow = `<tr data-flight-id="${flightId}" data-flight-icao="${flightIcao}" 
                              data-flight-callsign="${flightCallsign}" data-flight-nacp="${flightNacp}">
                                  <td>${flightId}</td>
                                  <td>${flightIcao}</td>
@@ -67,15 +68,23 @@
                                  <td>${flightNacp}</td>
                              </tr>`;
     
-              $('#flight-table tbody').append(newRow);
-          });
+            $('#flight-table tbody').append(newRow);
+        });
+    });
+</script>
     
-          // Handle WebSocket events for NACp alerts
-          socket.on('nacp_alert', function(data) {
-              // Display alert for flights with NACp value below threshold
-              alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
-          });
-  });
+<script>
+$(document).ready(function() {
+    // WebSocket connection for NACp alerts
+    var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+    // Handle WebSocket events for NACp alerts
+    socket.on('nacp_alert', function(data) {
+        // Display alert for flights with NACp value below threshold
+        <!-- alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`); -->
+        console.log(`Alert: Flight has a NACp value of`);
+    });
+});
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>

@@ -21,9 +21,9 @@ def read_dump1090_raw():
                 msg0 = hex_values_dict[icao_address][-2]
                 msg1 = hex_values_dict[icao_address][-1]
                 
-                # Extract the first 5 bits for the Type Code
-                type_code_msg0 = int(msg0[:5], 16)
-                type_code_msg1 = int(msg1[:5], 16)
+                # Extract the first hexadecimal character for the Type Code
+                type_code_msg0 = int(msg0[0], 16)
+                type_code_msg1 = int(msg1[0], 16)
 
                 print("Type Code Message 0:", type_code_msg0)
                 print("Type Code Message 1:", type_code_msg1)

@@ -51,13 +51,14 @@ def process_hex_values(icao_address):
 
         type_code_msg0 = mps.typecode(hex_value)
         
-        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
+        if type_code_msg0 in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             print("HEIA")
-            if hex_value[54] == '0':
+            binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
+            if binary_msg[54] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
                 print("HEIA2")
-            elif hex_value[54] == '1':
+            elif binary_msg[54] == '1':
                 msg_odd = hex_value
                 t_odd = int(time.time())
                 print("HEI3")

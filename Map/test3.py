@@ -51,7 +51,7 @@ def process_hex_values(icao_address):
 
         type_code_msg0 = mps.typecode(hex_value)
         
-        if type_code_msg0 in [5, 6, 7, 8]:
+        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             print("HEIA")
             if msg_even is None:
                 msg_even = hex_value

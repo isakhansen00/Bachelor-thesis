@@ -32,12 +32,12 @@ def read_dump1090_raw():
                 # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
                 if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:
                     # Decode Compact Position Reporting (CPR) format
-                    latitude, longitude = mps.adsb.cpr(msg0, msg1)
+                    latitude, longitude = mps.adsb.position_with_ref(msg0, msg1)
                     print("Latitude:", latitude)
                     print("Longitude:", longitude)
                 elif 20 <= type_code_msg0 <= 22 and 20 <= type_code_msg1 <= 22:
                     # Decode Compact Position Reporting (CPR) format for Type Codes 20-22
-                    latitude, longitude = mps.adsb.cpr(msg0, msg1)
+                    latitude, longitude = mps.adsb.position_with_ref(msg0, msg1)
                     print("Latitude:", latitude)
                     print("Longitude:", longitude)
                 else:
@@ -49,3 +49,4 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
+

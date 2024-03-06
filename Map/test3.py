@@ -52,29 +52,26 @@ def process_hex_values(icao_address):
         type_code_msg0 = mps.typecode(hex_value)
         
         if type_code_msg0 in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
-            print("HEIA")
             binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
             if binary_msg[54] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
-                print("HEIA2")
             elif binary_msg[54] == '1':
                 msg_odd = hex_value
                 t_odd = int(time.time())
-                print("HEI3")
                 
         if msg_even and msg_odd and t_even and t_odd:
             position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
             if position:
-                print("HEIA4")
                 longitude, latitude = position
-                print(f"Longitude: {longitude}, Latitude: {latitude}")
+                # print(f"Longitude: {longitude}, Latitude: {latitude}")
+                print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
                 # Save longitude and latitude to the database along with other information
                 msg_even = None
                 msg_odd = None
                 t_even = None
                 t_odd = None
-        
+    """
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
         message_data = {
@@ -89,7 +86,7 @@ def process_hex_values(icao_address):
         if nac_p[0] < 10:
             print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
         setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index
-
+    """
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()

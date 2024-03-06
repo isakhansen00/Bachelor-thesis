@@ -1,13 +1,8 @@
 import subprocess
 import pyModeS as mps
 import threading
-import json
-from azure.iot.device import IoTHubDeviceClient, Message
 
 hex_values_dict = {}
-CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
-MSG_SND = ''
-client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)  
 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
@@ -25,11 +20,48 @@ def read_dump1090_raw():
             if len(hex_values_dict[icao_address]) >= 2:
                 msg0 = hex_values_dict[icao_address][-2]
                 msg1 = hex_values_dict[icao_address][-1]
-                position = mps.decoder.adsb.position(msg0, msg1, 0, 0)  # Assuming timestamps are not used here
-                if position is not None:
-                    latitude, longitude = position
-                    print("Latitude:", latitude)
-                    print("Longitude:", longitude)
+                
+                # Extract the first hexadecimal character for the Type Code
+                type_code_msg0 = int(msg0[0], 16)
+                type_code_msg1 = int(msg1[0], 16)
+
+                print("Type Code Message 0:", type_code_msg0)
+                print("Type Code Message 1:", type_code_msg1)
+
+                
+                # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
+                if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:
+                    # Decode Compact Position Reporting (CPR) format
+                    
+                    # Make sure the message contains the position information
+                    if mps.adsb.position_with_ref_supported(msg0, msg1):
+                        # Extract reference latitudes and longitudes
+                        lat_ref = mps.adsb.altitude(msg0)  # Using altitude as a reference for latitude
+                        lon_ref = mps.adsb.altitude(msg1)  # Using altitude as a reference for longitude
+                        
+                        # Decode Compact Position Reporting (CPR) format
+                        latitude, longitude = mps.adsb.position_with_ref(msg0, msg1, lat_ref, lon_ref)
+                        print("Latitude:", latitude)
+                        print("Longitude:", longitude)
+                    else:
+                        print("Not a position message")
+                elif 20 <= type_code_msg0 <= 22 and 20 <= type_code_msg1 <= 22:
+                    # Decode Compact Position Reporting (CPR) format for Type Codes 20-22
+                    
+                    # Make sure the message contains the position information
+                    if mps.adsb.position_with_ref_supported(msg0, msg1):
+                        # Extract reference latitudes and longitudes
+                        lat_ref = mps.adsb.altitude(msg0)  # Using altitude as a reference for latitude
+                        lon_ref = mps.adsb.altitude(msg1)  # Using altitude as a reference for longitude
+                        
+                        # Decode Compact Position Reporting (CPR) format
+                        latitude, longitude = mps.adsb.position_with_ref(msg0, msg1, lat_ref, lon_ref)
+                        print("Latitude:", latitude)
+                        print("Longitude:", longitude)
+                    else:
+                        print("Not a position message")
+                else:
+                    print("Invalid message types for position decoding")
     
     print(hex_values_dict)
 
@@ -37,3 +69,4 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
+

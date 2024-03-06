@@ -31,23 +31,15 @@ def read_dump1090_raw():
                 
                 # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
                 if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:
-                    # Extract Compact Position Reporting (CPR) format
-                    lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
-                    lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
-                    if lat_cpr is not None and lon_cpr is not None:
-                        # Decode latitude and longitude from CPR format
-                        latitude, longitude = mps.adsb.cpr_decode(lat_cpr, lon_cpr)
-                        print("Latitude:", latitude)
-                        print("Longitude:", longitude)
+                    # Decode Compact Position Reporting (CPR) format
+                    latitude, longitude = mps.adsb.cpr(msg0, msg1)
+                    print("Latitude:", latitude)
+                    print("Longitude:", longitude)
                 elif 20 <= type_code_msg0 <= 22 and 20 <= type_code_msg1 <= 22:
-                    # Extract Compact Position Reporting (CPR) format for Type Codes 20-22
-                    lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
-                    lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
-                    if lat_cpr is not None and lon_cpr is not None:
-                        # Decode latitude and longitude from CPR format
-                        latitude, longitude = mps.adsb.cpr_decode(lat_cpr, lon_cpr)
-                        print("Latitude:", latitude)
-                        print("Longitude:", longitude)
+                    # Decode Compact Position Reporting (CPR) format for Type Codes 20-22
+                    latitude, longitude = mps.adsb.cpr(msg0, msg1)
+                    print("Latitude:", latitude)
+                    print("Longitude:", longitude)
                 else:
                     print("Invalid message types for position decoding")
     

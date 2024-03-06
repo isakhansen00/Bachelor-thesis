@@ -56,14 +56,14 @@ def process_hex_values(icao_address):
             if hex_value[6] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
+                print("HEIA2")
             elif hex_value[6] == '1':
                 msg_odd = hex_value
                 t_odd = int(time.time())
+                print("HEI3")
                 
         if msg_even and msg_odd and t_even and t_odd:
-            print("HEIA2")
             position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
-            print("HEI3")
             if position:
                 print("HEIA4")
                 longitude, latitude = position

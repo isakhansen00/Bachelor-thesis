@@ -9,10 +9,10 @@
     <table id="flight-table" class="table table-striped table-hover table-bordered text-center">
         <thead>
             <tr class="table-primary">
-                <th>ID</th>
-                <th>ICAO</th>
-                <th>Callsign</th>
-                <th>NACp</th>
+                <th class="sortable" data-sort="id">ID</th>
+                <th class="sortable" data-sort="icao">ICAO</th>
+                <th class="sortable" data-sort="callsign">Callsign</th>
+                <th class="sortable" data-sort="nacp">NACp</th>
             </tr>
         </thead>
         {% for flight_data in flight_data_list %}
@@ -94,4 +94,49 @@
     })
 </script>
 
+<script>
+    $(document).ready(function() {
+            // Function to sort table rows based on a specific column
+            function sortTable(column) {
+                var table = $('#flight-table');
+                var rows = table.find('tr').toArray().slice(1); // Exclude header row
+                var isAscending = true;
+  
+                rows.sort(function(a, b) {
+                    var valA = $(a).find('td').eq(column).text();
+                    var valB = $(b).find('td').eq(column).text();
+                    
+                    // Convert strings to numbers if sorting by ID column
+                    if (column === 0) {
+                        return parseInt(valA) - parseInt(valB);
+                    } else {
+                        return valA.localeCompare(valB); // Compare strings
+                    }
+                });
+  
+                // Reverse the order if already sorted in ascending order
+                if (table.find('th').eq(column).hasClass('sorted-asc')) {
+                    rows.reverse();
+                    isAscending = false;
+                }
+  
+                table.find('th').removeClass('sorted-asc sorted-desc').find('.arrow').remove();
+                if (isAscending) {
+                    table.find('th').eq(column).addClass('sorted-asc').append('<span class="arrow">&#9650;</span>');
+                } else {
+                    table.find('th').eq(column).addClass('sorted-desc').append('<span class="arrow">&#9660;</span>');
+                }
+  
+                $.each(rows, function(index, row) {
+                    table.children('tbody').append(row);
+                });
+            }
+  
+            // Handle click event on sortable column headers
+            $('.sortable').click(function() {
+                var columnIndex = $(this).index();
+                sortTable(columnIndex);
+            });
+    });
+  </script>
 {% endblock %}

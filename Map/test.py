@@ -21,8 +21,12 @@ def read_dump1090_raw():
                 msg0 = hex_values_dict[icao_address][-2]
                 msg1 = hex_values_dict[icao_address][-1]
                 
-                # Check message types (Type Code 9-18 or 20-22)
-                if mps.util.df(msg0) in range(9, 19) and mps.util.df(msg1) in range(9, 19):
+                # Extract Type Codes from the messages
+                type_code_msg0 = mps.util.typecode(msg0)
+                type_code_msg1 = mps.util.typecode(msg1)
+                
+                # Check if Type Codes fall within the specified ranges (9-18 or 20-22)
+                if 9 <= type_code_msg0 <= 18 and 9 <= type_code_msg1 <= 18:
                     # Extract Compact Position Reporting (CPR) format
                     lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
                     lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
@@ -31,7 +35,7 @@ def read_dump1090_raw():
                         latitude, longitude = mps.adsb.cpr_decode(lat_cpr, lon_cpr)
                         print("Latitude:", latitude)
                         print("Longitude:", longitude)
-                elif mps.util.df(msg0) in range(20, 23) and mps.util.df(msg1) in range(20, 23):
+                elif 20 <= type_code_msg0 <= 22 and 20 <= type_code_msg1 <= 22:
                     # Extract Compact Position Reporting (CPR) format for Type Codes 20-22
                     lat_cpr = mps.adsb.cpr_latitude(msg0, msg1)
                     lon_cpr = mps.adsb.cpr_longitude(msg0, msg1)
@@ -49,3 +53,4 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
+

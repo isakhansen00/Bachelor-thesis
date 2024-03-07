@@ -50,16 +50,16 @@ def get_new_data_from_staging_table():
     return new_data
 
 def check_nacp_threshold():
-    threshold_value = 2
+    nac_p_threshold_value = 10
     while True:
         new_data = get_new_data_from_staging_table()
         #socketio.emit('nacp_alert', {})
-        print("hei")
+        #print("hei")
         socketio.sleep(5)
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
-                 if int(flight_data2.nacp[1]) < threshold_value:
+                 if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
                      #socketio.sleep(1)

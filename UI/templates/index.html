@@ -5,6 +5,22 @@
     <h1 class="title1">
         ADS-B Table
     </h1>
+    <br>
+    <div class="container primary">
+        <input type="radio" name="filter-type" id="filter-by-id" value="0">
+        <label for="filter-by-id">ID</label>
+        <input type="radio" name="filter-type" id="filter-by-callsign" value="2">
+        <label for="filter-by-callsign">Callsign</label>
+        <input type="radio" name="filter-type" id="filter-by-nacp" value="3">
+        <label for="filter-by-nacp">NACp</label>
+    </div>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Enter ID, Callsign, or NACp</span>
+        </div>
+        <input class="form-control" type="text" id="filter-input">
+    </div> 
+    <br>
 
     <table id="flight-table" class="table table-striped table-hover table-bordered text-center">
         <thead>
@@ -152,4 +168,46 @@ $(document).ready(function() {
             });
     });
   </script>
+
+<script>
+    $(document).ready(function() {
+        // Function to filter table rows by ID, callsign, or NACp based on user choice
+        function filterTable() {
+            var input, filter, table, tr, td, i, columnIndex;
+            input = document.getElementById("filter-input");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("flight-table");
+            tr = table.getElementsByTagName("tr");
+
+            // Determine which column to filter based on the selected radio button
+            if ($("#filter-by-id").prop("checked")) {
+                columnIndex = 0; // Index 0 corresponds to ID column
+            } else if ($("#filter-by-callsign").prop("checked")) {
+                columnIndex = 2; // Index 2 corresponds to callsign column
+            } else if ($("#filter-by-nacp").prop("checked")) {
+                columnIndex = 3; // Index 3 corresponds to NACp column
+            } else {
+                return; // No radio button selected, do not filter
+            }
+
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[columnIndex];
+                if (td) {
+                    var txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Call filterTable function when the user types in the input field or changes the radio button selection
+        $("#filter-input, input[type='radio']").on("keyup change", function() {
+            filterTable();
+        });
+    });
+</script>
+
 {% endblock %}

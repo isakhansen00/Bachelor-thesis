@@ -73,25 +73,41 @@
     
         // Handle WebSocket events for new flight data
         socket.on('new_flight_data', function(data) {
-            const flightId = data.id;
-            const flightIcao = data.icao;
-            const flightCallsign = data.callsign;
-            const flightNacp = data.nacp;
+            var tableRef = document.getElementById('flight-table').getElementsByTagName('tbody')[0];
+
+            // Insert a new row at the beginning of the tbody
+            var newRow = tableRef.insertRow(0);
     
-            const newRow = `<tr data-flight-id="${flightId}" data-flight-icao="${flightIcao}" 
-                             data-flight-callsign="${flightCallsign}" data-flight-nacp="${flightNacp}">
-                                 <td>${flightId}</td>
-                                 <td>${flightIcao}</td>
-                                 <td>${flightCallsign}</td>
-                                 <td>${flightNacp}</td>
-                             </tr>`;
-                             console.log(`Alert` + data.id + data.callsign + data.icao + data.nacp);
-                             console.log(newRow)
+            // Insert cells into the new row
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+            var cell3 = newRow.insertCell(2);
+            var cell4 = newRow.insertCell(3);
     
-            $('#flight-table tbody').append(newRow);
+            // Add data to the cells
+            cell1.innerHTML = data.id;
+            cell2.innerHTML = data.icao;
+            cell3.innerHTML = data.callsign;
+            cell4.innerHTML = data.nacp;
+
+            // Rebind click event listener for new rows
+            $(newRow).attr({
+                'data-toggle': 'modal',
+                'data-target': '#myModal',
+                'data-flight-id': data.id,
+                'data-flight-icao': data.icao,
+                'data-flight-callsign': data.callsign,
+                'data-flight-nacp': data.nacp
+            }).click(function() {
+                $('#myModal #data-flight-id').text(data.id);
+                $('#myModal #data-flight-icao').text(data.icao);
+                $('#myModal #data-flight-callsign').text(data.callsign);
+                $('#myModal #data-flight-nacp').text(data.nacp);
+            });
         });
     });
 </script>
+
     
 <script>
 $(document).ready(function() {

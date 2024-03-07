@@ -15,58 +15,68 @@ thread_lock = Lock()
 
 db = pyodbc.connect('DRIVER=' + driver + ';SERVER=' +
     server + ';PORT=1433;DATABASE=' + database +
-    ';UID=' + username + ';PWD=' + password)
+    ';UID=' + username + ';PWD=' + password + ";Mars_Connection=yes")
+
+
 
 cursor = db.cursor()
+cursor2 = db.cursor()
+cursor3 = db.cursor()
+cursor4 = db.cursor()
 cursor.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID DESC")
 rows = cursor.fetchall()
+cursor.close()
 
 flight_data_list = []
-for row in rows:
-    flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
-    flight_data_list.append(flight_data)
+# for row in rows:
+#     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
+#     flight_data_list.append(flight_data)
 
-# Function to periodically check staging table for new data
-def check_staging_table():
-    while True:
+# # Function to periodically check staging table for new data
+# def check_staging_table():
+#     while True:
 
-        new_data = get_new_data_from_staging_table()
-        if new_data:
-            for flight_data in new_data:
-                process_and_insert_into_main_table(flight_data)
-                check_nacp_threshold(flight_data)
-        socketio.sleep(2)
+#         new_data = get_new_data_from_staging_table()
+#         if new_data:
+#             for flight_data in new_data:
+#                 process_and_insert_into_main_table(flight_data)
+#                 check_nacp_threshold(flight_data)
+#         socketio.sleep(2)
 
 def get_new_data_from_staging_table():
-    cursor.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData WHERE isprocessed = 0")
-    rows = cursor.fetchall()
+    cursor2 = db.cursor()
+    cursor2.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData WHERE isprocessed = 0")
+    rows = cursor2.fetchall()
     new_data = []
     for row in rows:
         flight_data = FlightDataClass(*row)
-        cursor.execute("UPDATE dbo.FlightData SET isprocessed = 1 WHERE ID = ?", (flight_data.id,))
+        cursor2.execute("UPDATE dbo.FlightData SET isprocessed = 1 WHERE ID = ?", (flight_data.id,))
         db.commit()
 
         new_data.append(flight_data)
+    cursor2.close()
     return new_data
 
 def check_nacp_threshold():
-    nac_p_threshold_value = 10
+    nac_p_threshold_value = 9
     while True:
         new_data = get_new_data_from_staging_table()
         #socketio.emit('nacp_alert', {})
         #print("hei")
-        socketio.sleep(5)
+        #socketio.sleep(1)
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
-                     #socketio.sleep(1)
+                     socketio.sleep(2)
 
 def process_and_insert_into_main_table(flight_data):
-    cursor.execute("INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp) VALUES (?, ?, ?)", (flight_data.icao, flight_data.callsign, flight_data.nacp))
+    cursor3 = db.cursor()
+    cursor3.execute("INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp) VALUES (?, ?, ?)", (flight_data.icao, flight_data.callsign, flight_data.nacp))
     db.commit()
+    cursor3.close()
     print(flight_data.callsign)
     
     socketio.emit('new_flight_data', {
@@ -81,14 +91,16 @@ def process_and_insert_into_main_table(flight_data):
 
 @app.route("/")
 def index():
-    cursor = db.cursor()
-    cursor.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID DESC")
-    rows = cursor.fetchall()
+    cursor4 = db.cursor()
+    cursor4.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID DESC")
+
+    rows = cursor4.fetchall()
 
     flight_data_list = []
     for row in rows:
         flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
         flight_data_list.append(flight_data)
+    cursor4.close()
     return render_template('index.html', flight_data_list = flight_data_list)
 
 """

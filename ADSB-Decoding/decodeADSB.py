@@ -34,7 +34,7 @@ def process_hex_values(icao_address):
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
-            if nac_p[0] < 10:
+            if nac_p[0] < 8:
                 print(f"Potential jamming detected. NACp is: {nac_p[0]}")
         except RuntimeError:
             pass
@@ -49,7 +49,7 @@ def process_hex_values(icao_address):
         message_data = {
             "ICAO": icao_address,
             "Callsign": flight_callsign,
-            "NACp": nac_p
+            "NACp": nac_p[0]
         }
         message = json.dumps(message_data)
         print(f"Message: {message}")

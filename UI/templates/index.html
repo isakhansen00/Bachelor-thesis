@@ -15,16 +15,18 @@
                 <th class="sortable" data-sort="nacp">NACp</th>
             </tr>
         </thead>
-        {% for flight_data in flight_data_list %}
-        <tr data-toggle="modal" data-target="#myModal" 
-        data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
-        data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
-            <td>{{ flight_data.id }}</td>
-            <td>{{ flight_data.icao }}</td>
-            <td>{{ flight_data.callsign }}</td>
-            <td>{{ flight_data.nacp }}</td>
-        </tr>
-        {% endfor %}
+        <tbody>
+            {% for flight_data in flight_data_list %}
+            <tr data-toggle="modal" data-target="#myModal" 
+            data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
+            data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
+                <td>{{ flight_data.id }}</td>
+                <td>{{ flight_data.icao }}</td>
+                <td>{{ flight_data.callsign }}</td>
+                <td>{{ flight_data.nacp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 
@@ -67,6 +69,8 @@
                                  <td>${flightCallsign}</td>
                                  <td>${flightNacp}</td>
                              </tr>`;
+                             console.log(`Alert` + data.id + data.callsign + data.icao + data.nacp);
+                             console.log(newRow)
     
             $('#flight-table tbody').append(newRow);
         });
@@ -81,7 +85,7 @@ $(document).ready(function() {
     // Handle WebSocket events for NACp alerts
     socket.on('nacp_alert', function(data) {
         // Display alert for flights with NACp value below threshold
-        <!-- alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`); -->
+        alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
         console.log(`Alert: Flight has a NACp value of`);
     });
 });

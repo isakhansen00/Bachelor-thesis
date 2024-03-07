@@ -50,22 +50,24 @@ def get_new_data_from_staging_table():
     return new_data
 
 def check_nacp_threshold():
-    threshold_value = 11
+    threshold_value = 2
     while True:
-        # new_data = get_new_data_from_staging_table()
-        socketio.emit('nacp_alert', {})
+        new_data = get_new_data_from_staging_table()
+        #socketio.emit('nacp_alert', {})
         print("hei")
-        socketio.sleep(1)
-        # if new_data or not new_data:
-        #     for flight_data2 in new_data:
-        #         if int(flight_data2.nacp[1]) < threshold_value:
-        #             # socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
-        #             socketio.emit('nacp_alert', {'callsign'})
-        #             socketio.sleep(1)
+        socketio.sleep(5)
+        if new_data:
+             for flight_data2 in new_data:
+                 process_and_insert_into_main_table(flight_data2)
+                 if int(flight_data2.nacp[1]) < threshold_value:
+                     socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
+                     #socketio.emit('nacp_alert', {'callsign'})
+                     #socketio.sleep(1)
 
 def process_and_insert_into_main_table(flight_data):
     cursor.execute("INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp) VALUES (?, ?, ?)", (flight_data.icao, flight_data.callsign, flight_data.nacp))
     db.commit()
+    print(flight_data.callsign)
     
     socketio.emit('new_flight_data', {
         'id': flight_data.id,
@@ -105,9 +107,9 @@ def connect():
 """
 Decorator for disconnect
 """
-@socketio.on('disconnect')
-def disconnect():
-    print('Client disconnected',  request.sid)
+# @socketio.on('disconnect')
+# def disconnect():
+#     print('Client disconnected',  request.sid)
 
 if __name__=="__main__":
     socketio.run(app, debug=True)

@@ -69,10 +69,10 @@ def process_hex_values(icao_address):
                     flight_key = f"{flight_callsign}_{icao_address}"
                     if flight_key not in flight_positions:
                         flight_positions[flight_key] = (longitude, latitude)
-                        print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                        print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}", end='\r', flush=True)
                     else:
                         flight_positions[flight_key] = (longitude, latitude)
-                        print(f"Flight {flight_callsign} with icao {icao_address} has updated position: LO: {longitude}, LA: {latitude}")
+                        print(f"Flight {flight_callsign} with icao {icao_address} has updated position: LO: {longitude}, LA: {latitude}", end='\r', flush=True)
                     # Save longitude and latitude to the database along with other information
                     msg_even = None
                     msg_odd = None

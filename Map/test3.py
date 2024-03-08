@@ -75,6 +75,8 @@ def process_hex_values(icao_address):
                     t_even = None
                     t_odd = None
             except RuntimeError:
+                print(msg_even)
+                print(msg_odd)
                 print("HEIA")
     """
     if flight_callsign and nac_p:

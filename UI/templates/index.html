@@ -44,6 +44,11 @@
             {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+        <button class="btn btn-primary" id="prev-page">Previous</button>
+        <span id="page-number" class="mx-2"></span>  <!-- Element to display page number -->
+        <button class="btn btn-primary" id="next-page">Next</button>
+    </div>
 </div>
 
 <!-- Modal -->
@@ -64,8 +69,11 @@
     </div>
 </div>
 
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
+
+
 <script>
     $(document).ready(function() {
         // WebSocket connection for new flight data
@@ -108,7 +116,6 @@
     });
 </script>
 
-    
 <script>
 $(document).ready(function() {
     // WebSocket connection for NACp alerts
@@ -187,6 +194,17 @@ $(document).ready(function() {
 
 <script>
     $(document).ready(function() {
+        var currentPage = 1;
+        var itemsPerPage = 50;
+        var totalItems = {{ numberOfItems }};
+        var totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Function to update total pages based on filtering
+        function updateTotalPages() {
+            var filteredRowsCount = $('#flight-table tbody tr:visible').length;
+            totalPages = Math.ceil(filteredRowsCount / itemsPerPage);
+        }
+
         // Function to filter table rows by ID, callsign, or NACp based on user choice
         function filterTable() {
             var input, filter, table, tr, td, i, columnIndex;
@@ -203,27 +221,108 @@ $(document).ready(function() {
             } else if ($("#filter-by-nacp").prop("checked")) {
                 columnIndex = 3; // Index 3 corresponds to NACp column
             } else {
-                return; // No radio button selected, do not filter
+                // If no filter applied, reset filter and calculate total pages based on all rows
+                filter = "";
+                columnIndex = -1;
             }
+
+            var filteredRows = []; // Store filtered rows
 
             for (i = 0; i < tr.length; i++) {
                 td = tr[i].getElementsByTagName("td")[columnIndex];
                 if (td) {
                     var txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
+                    if (filter === "" || txtValue.toUpperCase().indexOf(filter) > -1) {
+                        filteredRows.push(tr[i]); // Add matching rows to filteredRows
                     }
                 }
             }
+
+            // Calculate the total number of pages after filtering
+            var totalPagesAfterFiltering = Math.ceil(filteredRows.length / itemsPerPage);
+
+            // Update total pages
+            totalPages = totalPagesAfterFiltering;
+
+            // Display only the rows corresponding to the current page
+            var startIndex = (currentPage - 1) * itemsPerPage;
+            var endIndex = Math.min(startIndex + itemsPerPage, filteredRows.length);
+
+            // Hide all rows
+            $(tr).hide();
+            $(tr[0]).show(); // Ensure header row is visible
+
+            // Show rows for the current page after filtering
+            for (i = startIndex; i < endIndex; i++) {
+                $(filteredRows[i]).show();
+            }
+
+            // Update page number display
+            $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
         }
 
         // Call filterTable function when the user types in the input field or changes the radio button selection
         $("#filter-input, input[type='radio']").on("keyup change", function() {
+            currentPage = 1; // Reset current page to 1 when filter changes
             filterTable();
         });
+
+        // Pagination logic
+        $('#prev-page').click(function() {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage();
+            }
+        });
+
+        $('#next-page').click(function() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage();
+            }
+        });
+
+        // Function to show the specified page
+function showPage() {
+    var startIndex = (currentPage - 1) * itemsPerPage;
+    var endIndex = startIndex + itemsPerPage;
+
+    var filterValue = $("#filter-input").val().trim().toUpperCase();
+    var filterColumnIndex;
+    if ($("#filter-by-id").prop("checked")) {
+        filterColumnIndex = 0;
+    } else if ($("#filter-by-callsign").prop("checked")) {
+        filterColumnIndex = 2;
+    } else if ($("#filter-by-nacp").prop("checked")) {
+        filterColumnIndex = 3;
+    }
+
+    var filteredRows;
+    if (filterValue === "") {
+        filteredRows = $('#flight-table tbody tr');
+    } else {
+        filteredRows = $('#flight-table tbody tr').filter(function() {
+            var text = $(this).find('td').eq(filterColumnIndex).text().toUpperCase();
+            return text.indexOf(filterValue) > -1;
+        });
+    }
+
+    // Hide all visible rows
+    filteredRows.hide();
+
+    // Show the rows for the current page
+    for (var i = startIndex; i < endIndex && i < filteredRows.length; i++) {
+        $(filteredRows[i]).show();
+    }
+
+    // Update page number display
+    $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
+}
+
+        // Show initial page and total pages when the site loads
+        showPage();
     });
 </script>
+
 
 {% endblock %}

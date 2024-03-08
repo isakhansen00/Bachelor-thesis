@@ -3,7 +3,6 @@ from credentials import *
 from flightdata import FlightDataClass
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-import time
 from threading import Lock
 from requests import request
 
@@ -16,8 +15,6 @@ thread_lock = Lock()
 db = pyodbc.connect('DRIVER=' + driver + ';SERVER=' +
     server + ';PORT=1433;DATABASE=' + database +
     ';UID=' + username + ';PWD=' + password + ";Mars_Connection=yes")
-
-
 
 cursor = db.cursor()
 cursor2 = db.cursor()
@@ -100,8 +97,9 @@ def index():
     for row in rows:
         flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
         flight_data_list.append(flight_data)
+    numberOfItems = len(flight_data_list)
     cursor4.close()
-    return render_template('index.html', flight_data_list = flight_data_list)
+    return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
 """
 Decorator for connect

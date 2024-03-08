@@ -65,6 +65,7 @@ def process_hex_values(icao_address):
         if flight_callsign and msg_even and msg_odd and t_even and t_odd:
             try:
                 position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
+                print(f"CORRECT FORMAT: {msg_even}, {msg_odd}")
                 if position:
                     longitude, latitude = position
                     # print(f"Longitude: {longitude}, Latitude: {latitude}")
@@ -75,8 +76,7 @@ def process_hex_values(icao_address):
                     t_even = None
                     t_odd = None
             except RuntimeError:
-                print(msg_even)
-                print(msg_odd)
+                print(f"WRONG FORMAT: {msg_even}, {msg_odd}")
                 print("HEIA")
     """
     if flight_callsign and nac_p:

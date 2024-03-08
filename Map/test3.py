@@ -52,6 +52,7 @@ def process_hex_values(icao_address):
             pass
 
         type_code_msg0 = mps.typecode(hex_value)
+        print(type_code_msg0)
         
         if type_code_msg0 in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary

@@ -22,7 +22,6 @@ def read_dump1090_raw():
             process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
 
 def process_hex_values(icao_address):
-    global plane_positions
     hex_values = hex_values_dict.get(icao_address, [])
     last_processed_index = getattr(process_hex_values, f"last_index_{icao_address}", 0)
     new_hex_values = hex_values[last_processed_index:]
@@ -70,7 +69,6 @@ def process_hex_values(icao_address):
 
 
 def generate_map():
-    global plane_positions
     while True:
         map_obj = folium.Map(location=[0, 0], zoom_start=2)
         for icao_address, positions in plane_positions.items():

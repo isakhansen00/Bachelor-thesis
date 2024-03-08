@@ -6,9 +6,7 @@ from azure.iot.device import IoTHubDeviceClient, Message
 import time
 
 hex_values_dict = {}
-CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
-MSG_SND = ''
-client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)  
+ 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
@@ -53,7 +51,7 @@ def process_hex_values(icao_address):
 
         type_code_msg0 = mps.typecode(hex_value)
         
-        if type_code_msg0 in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
+        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
             if binary_msg[54] == '0':
                 msg_even = hex_value
@@ -67,7 +65,6 @@ def process_hex_values(icao_address):
                 position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
                 if position:
                     longitude, latitude = position
-                    # print(f"Longitude: {longitude}, Latitude: {latitude}")
                     print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
                     # Save longitude and latitude to the database along with other information
                     msg_even = None
@@ -76,22 +73,7 @@ def process_hex_values(icao_address):
                     t_odd = None
             except RuntimeError:
                 pass
-    """
-    if flight_callsign and nac_p:
-        print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
-        message_data = {
-            "ICAO": icao_address,
-            "Callsign": flight_callsign,
-            "NACp": nac_p
-        }
-        message = json.dumps(message_data)
-        print(f"Message: {message}")
-        # Send message to Azure IoT Hub
-        client.send_message(message)
-        if nac_p[0] < 10:
-            print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
-        setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index
-    """
+
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()

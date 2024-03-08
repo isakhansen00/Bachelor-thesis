@@ -283,41 +283,41 @@ $(document).ready(function() {
         });
 
         // Function to show the specified page
-function showPage() {
-    var startIndex = (currentPage - 1) * itemsPerPage;
-    var endIndex = startIndex + itemsPerPage;
+        function showPage() {
+            var startIndex = (currentPage - 1) * itemsPerPage;
+            var endIndex = startIndex + itemsPerPage;
 
-    var filterValue = $("#filter-input").val().trim().toUpperCase();
-    var filterColumnIndex;
-    if ($("#filter-by-id").prop("checked")) {
-        filterColumnIndex = 0;
-    } else if ($("#filter-by-callsign").prop("checked")) {
-        filterColumnIndex = 2;
-    } else if ($("#filter-by-nacp").prop("checked")) {
-        filterColumnIndex = 3;
-    }
+            var filterValue = $("#filter-input").val().trim().toUpperCase();
+            var filterColumnIndex;
+            if ($("#filter-by-id").prop("checked")) {
+                filterColumnIndex = 0;
+            } else if ($("#filter-by-callsign").prop("checked")) {
+                filterColumnIndex = 2;
+            } else if ($("#filter-by-nacp").prop("checked")) {
+                filterColumnIndex = 3;
+            }
 
-    var filteredRows;
-    if (filterValue === "") {
-        filteredRows = $('#flight-table tbody tr');
-    } else {
-        filteredRows = $('#flight-table tbody tr').filter(function() {
-            var text = $(this).find('td').eq(filterColumnIndex).text().toUpperCase();
-            return text.indexOf(filterValue) > -1;
-        });
-    }
+            var filteredRows;
+            if (filterValue === "") {
+                filteredRows = $('#flight-table tbody tr');
+            } else {
+                filteredRows = $('#flight-table tbody tr').filter(function() {
+                    var text = $(this).find('td').eq(filterColumnIndex).text().toUpperCase();
+                    return text.indexOf(filterValue) > -1;
+                });
+            }
 
-    // Hide all visible rows
-    filteredRows.hide();
+            // Hide all visible rows
+            filteredRows.hide();
 
-    // Show the rows for the current page
-    for (var i = startIndex; i < endIndex && i < filteredRows.length; i++) {
-        $(filteredRows[i]).show();
-    }
+            // Show the rows for the current page
+            for (var i = startIndex; i < endIndex && i < filteredRows.length; i++) {
+                $(filteredRows[i]).show();
+            }
 
-    // Update page number display
-    $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
-}
+            // Update page number display
+            $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
+        }
 
         // Show initial page and total pages when the site loads
         showPage();

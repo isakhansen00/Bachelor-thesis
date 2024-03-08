@@ -62,17 +62,20 @@ def process_hex_values(icao_address):
                 msg_odd = hex_value
                 t_odd = int(time.time())
                 
-        if msg_even and msg_odd and t_even and t_odd:
-            position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
-            if position:
-                longitude, latitude = position
-                # print(f"Longitude: {longitude}, Latitude: {latitude}")
-                print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                # Save longitude and latitude to the database along with other information
-                msg_even = None
-                msg_odd = None
-                t_even = None
-                t_odd = None
+        if flight_callsign and msg_even and msg_odd and t_even and t_odd:
+            try:
+                position = mps.adsb.position(msg_even, msg_odd, t_even, t_odd)
+                if position:
+                    longitude, latitude = position
+                    # print(f"Longitude: {longitude}, Latitude: {latitude}")
+                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                    # Save longitude and latitude to the database along with other information
+                    msg_even = None
+                    msg_odd = None
+                    t_even = None
+                    t_odd = None
+            except RuntimeError:
+                pass
     """
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")

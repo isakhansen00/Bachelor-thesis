@@ -34,7 +34,7 @@ def extract_lat_lon_from_adsb(adsb_message):
 
 def read_dump1090_raw():
 
-    process = subprocess.Popen(['./dump1090', '--interactive'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--interactive'], stdout=subprocess.PIPE, universal_newlines=True)
 
     for line in process.stdout:
         if line.startswith("MSG,"):

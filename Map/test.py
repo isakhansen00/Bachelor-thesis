@@ -14,7 +14,7 @@ def read_dump1090_raw():
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
-        # print("Received ADS-B signal:", hex_value)
+        print("Received ADS-B signal:", hex_value)
         icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
         if icao_address is not None:
             hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address

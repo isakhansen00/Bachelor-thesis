@@ -5,8 +5,8 @@ import json
 from azure.iot.device import IoTHubDeviceClient, Message
 import time
 
-# Dictionary to store state for each aircraft
-aircraft_state = {}
+hex_values_dict = {}
+flight_positions = {}  # Dictionary to store latest position for each flight
 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
@@ -15,15 +15,16 @@ def read_dump1090_raw():
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
+        # print("Received ADS-B signal:", hex_value)
         icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
         if icao_address is not None:
-            aircraft_state.setdefault(icao_address, {}).setdefault('hex_values', []).append(hex_value)  # Append hex values for the ICAO address
-            process_hex_values(icao_address)  # Process hex values for the ICAO address
+            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
+            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
 
 def process_hex_values(icao_address):
-    state = aircraft_state.get(icao_address, {})
-    hex_values = state.get('hex_values', [])
-    last_processed_index = state.get('last_processed_index', 0)
+    hex_values = hex_values_dict.get(icao_address, [])
+    # print(f"Processing hex values for ICAO address {icao_address}")
+    last_processed_index = getattr(process_hex_values, f"last_index_{icao_address}", 0)
     new_hex_values = hex_values[last_processed_index:]
     
     flight_callsign = None
@@ -34,8 +35,13 @@ def process_hex_values(icao_address):
     t_odd = None
     
     for hex_value in new_hex_values:
+        
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
+            """
+            if nac_p[0] < 10:
+                print(f"Potential jamming detected. NACp is: {nac_p[0]}")
+                """
         except RuntimeError:
             pass
         
@@ -45,9 +51,10 @@ def process_hex_values(icao_address):
             pass
 
         type_code_msg0 = mps.typecode(hex_value)
+        print(type_code_msg0)
         
         if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
-            binary_msg = bin(int(hex_value, 16))[2:].zfill(112)
+            binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
             if binary_msg[54] == '0':
                 msg_even = hex_value
                 t_even = int(time.time())
@@ -60,12 +67,20 @@ def process_hex_values(icao_address):
                 position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
                 if position:
                     longitude, latitude = position
-                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                    flight_key = f"{flight_callsign}_{icao_address}"
+                    if flight_key not in flight_positions:
+                        flight_positions[flight_key] = (longitude, latitude)
+                        print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                    else:
+                        flight_positions[flight_key] = (longitude, latitude)
+                        print(f"Flight {flight_callsign} with icao {icao_address} has updated position: LO: {longitude}, LA: {latitude}")
+                    # Save longitude and latitude to the database along with other information
+                    msg_even = None
+                    msg_odd = None
+                    t_even = None
+                    t_odd = None
             except RuntimeError:
                 pass
-    
-    # Update the last processed index for this aircraft
-    aircraft_state[icao_address]['last_processed_index'] = len(hex_values)
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)

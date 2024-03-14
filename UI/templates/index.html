@@ -33,14 +33,25 @@
         </thead>
         <tbody>
             {% for flight_data in flight_data_list %}
-            <tr data-toggle="modal" data-target="#myModal" 
-            data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
-            data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
-                <td>{{ flight_data.id }}</td>
-                <td>{{ flight_data.icao }}</td>
-                <td>{{ flight_data.callsign }}</td>
-                <td>{{ flight_data.nacp }}</td>
-            </tr>
+                {% if flight_data.nacp <= 9 %}
+                <tr class="table-danger" data-toggle="modal" data-target="#myModal" 
+                data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
+                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
+                    <td>{{ flight_data.id }}</td>
+                    <td>{{ flight_data.icao }}</td>
+                    <td>{{ flight_data.callsign }}</td>
+                    <td>{{ flight_data.nacp }}</td>
+                </tr>
+                {% else %}
+                <tr data-toggle="modal" data-target="#myModal" 
+                data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
+                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
+                    <td>{{ flight_data.id }}</td>
+                    <td>{{ flight_data.icao }}</td>
+                    <td>{{ flight_data.callsign }}</td>
+                    <td>{{ flight_data.nacp }}</td>
+                </tr>
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>

@@ -13,6 +13,9 @@
         <label for="filter-by-callsign">Callsign</label>
         <input type="radio" name="filter-type" id="filter-by-nacp" value="3">
         <label for="filter-by-nacp">NACp</label>
+        <br>
+        <input type="checkbox" name="filter-type" id="filter-by-warning" value="4">
+        <label for="filter-by-warning">Warnings</label>
     </div>
     <div class="input-group mb-3">
         <div class="input-group-prepend">
@@ -29,6 +32,10 @@
                 <th class="sortable" data-sort="icao">ICAO</th>
                 <th class="sortable" data-sort="callsign">Callsign</th>
                 <th class="sortable" data-sort="nacp">NACp</th>
+                <th class="sortable" data-sort="warning"><svg id="svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                  </svg></th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +48,10 @@
                     <td>{{ flight_data.icao }}</td>
                     <td>{{ flight_data.callsign }}</td>
                     <td>{{ flight_data.nacp }}</td>
+                    <td><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                        <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                        <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                      </svg></td>
                 </tr>
                 {% else %}
                 <tr data-toggle="modal" data-target="#myModal" 
@@ -50,6 +61,7 @@
                     <td>{{ flight_data.icao }}</td>
                     <td>{{ flight_data.callsign }}</td>
                     <td>{{ flight_data.nacp }}</td>
+                    <td style="border: none;"></td>
                 </tr>
                 {% endif %}
             {% endfor %}
@@ -91,7 +103,7 @@
         function colorTable() {
             $('#flight-table tbody tr').each(function() {
                 var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
-                if (nacpValue <= 9) {
+                if (nacpValue <= 11) {
                     $(this).addClass('table-danger');
                 } else {
                     $(this).removeClass('table-danger');
@@ -229,60 +241,65 @@ $(document).ready(function() {
         }
 
         // Function to filter table rows by ID, callsign, or NACp based on user choice
-        function filterTable() {
-            var input, filter, table, tr, td, i, columnIndex;
-            input = document.getElementById("filter-input");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("flight-table");
-            tr = table.getElementsByTagName("tr");
+        // Function to filter table rows by ID, callsign, or NACp based on user choice
+function filterTable() {
+    var input, filter, table, tr, td, i, columnIndex;
+    input = document.getElementById("filter-input");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("flight-table");
+    tr = table.getElementsByTagName("tr");
 
-            // Determine which column to filter based on the selected radio button
-            if ($("#filter-by-id").prop("checked")) {
-                columnIndex = 0; // Index 0 corresponds to ID column
-            } else if ($("#filter-by-callsign").prop("checked")) {
-                columnIndex = 2; // Index 2 corresponds to callsign column
-            } else if ($("#filter-by-nacp").prop("checked")) {
-                columnIndex = 3; // Index 3 corresponds to NACp column
-            } else {
-                // If no filter applied, reset filter and calculate total pages based on all rows
-                filter = "";
-                columnIndex = -1;
+    // Determine which column to filter based on the selected radio button
+    if ($("#filter-by-id").prop("checked")) {
+        columnIndex = 0; // Index 0 corresponds to ID column
+    } else if ($("#filter-by-callsign").prop("checked")) {
+        columnIndex = 2; // Index 2 corresponds to callsign column
+    } else if ($("#filter-by-nacp").prop("checked")) {
+        columnIndex = 3; // Index 3 corresponds to NACp column
+    } else {
+        // If no filter applied, reset filter and calculate total pages based on all rows
+        filter = "";
+        columnIndex = -1;
+    }
+
+    var filteredRows = []; // Store filtered rows
+
+    for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[columnIndex];
+        if (td) {
+            var txtValue = td.textContent || td.innerText;
+            var warningIcon = $(tr[i]).find('td').eq(4).find('svg'); // Assuming warning icon is in the fifth column (index 4)
+
+            if ((filter === "" || txtValue.toUpperCase().indexOf(filter) > -1) &&
+                (!$("#filter-by-warning").prop("checked") || warningIcon.length > 0)) {
+                filteredRows.push(tr[i]); // Add matching rows to filteredRows
             }
-
-            var filteredRows = []; // Store filtered rows
-
-            for (i = 0; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[columnIndex];
-                if (td) {
-                    var txtValue = td.textContent || td.innerText;
-                    if (filter === "" || txtValue.toUpperCase().indexOf(filter) > -1) {
-                        filteredRows.push(tr[i]); // Add matching rows to filteredRows
-                    }
-                }
-            }
-
-            // Calculate the total number of pages after filtering
-            var totalPagesAfterFiltering = Math.ceil(filteredRows.length / itemsPerPage);
-
-            // Update total pages
-            totalPages = totalPagesAfterFiltering;
-
-            // Display only the rows corresponding to the current page
-            var startIndex = (currentPage - 1) * itemsPerPage;
-            var endIndex = Math.min(startIndex + itemsPerPage, filteredRows.length);
-
-            // Hide all rows
-            $(tr).hide();
-            $(tr[0]).show(); // Ensure header row is visible
-
-            // Show rows for the current page after filtering
-            for (i = startIndex; i < endIndex; i++) {
-                $(filteredRows[i]).show();
-            }
-
-            // Update page number display
-            $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
         }
+    }
+
+    // Calculate the total number of pages after filtering
+    var totalPagesAfterFiltering = Math.ceil(filteredRows.length / itemsPerPage);
+
+    // Update total pages
+    totalPages = totalPagesAfterFiltering;
+
+    // Display only the rows corresponding to the current page
+    var startIndex = (currentPage - 1) * itemsPerPage;
+    var endIndex = Math.min(startIndex + itemsPerPage, filteredRows.length);
+
+    // Hide all rows
+    $(tr).hide();
+    $(tr[0]).show(); // Ensure header row is visible
+
+    // Show rows for the current page after filtering
+    for (i = startIndex; i < endIndex; i++) {
+        $(filteredRows[i]).show();
+    }
+
+    // Update page number display
+    $('#page-number').text('Page ' + currentPage + ' of ' + totalPages);
+}
+
 
         // Call filterTable function when the user types in the input field or changes the radio button selection
         $("#filter-input, input[type='radio']").on("keyup change", function() {
@@ -318,7 +335,8 @@ $(document).ready(function() {
                 filterColumnIndex = 2;
             } else if ($("#filter-by-nacp").prop("checked")) {
                 filterColumnIndex = 3;
-            }
+            } 
+
 
             var filteredRows;
             if (filterValue === "") {
@@ -345,6 +363,53 @@ $(document).ready(function() {
         // Show initial page and total pages when the site loads
         showPage();
     });
+</script>
+
+<script>
+// Function to filter table rows by warnings
+function filterWarnings() {
+    var isChecked = $('#filter-by-warning').prop('checked');
+    var filterValue = $("#filter-input").val().trim().toUpperCase();
+    var filterColumnIndex;
+    
+    if ($("#filter-by-id").prop("checked")) {
+        filterColumnIndex = 0; // Index 0 corresponds to ID column
+    } else if ($("#filter-by-callsign").prop("checked")) {
+        filterColumnIndex = 2; // Index 2 corresponds to callsign column
+    } else if ($("#filter-by-nacp").prop("checked")) {
+        filterColumnIndex = 3; // Index 3 corresponds to NACp column
+    } 
+
+    $('#flight-table tbody tr').each(function() {
+        var warningIcon = $(this).find('td').eq(4).find('svg'); // Assuming warning icon is in the fifth column (index 4)
+        var td = $(this).find('td').eq(filterColumnIndex);
+        var text = td.text().toUpperCase();
+
+        if (isChecked) {
+            if (warningIcon.length === 0 || (filterValue !== "" && text.indexOf(filterValue) === -1)) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        } else {
+            if (filterValue !== "" && text.indexOf(filterValue) === -1) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        }
+    });
+}
+
+
+// Call filterWarnings function when the checkbox state changes
+$('#filter-by-warning').change(function() {
+    filterWarnings();
+});
+
+// Call filterWarnings function initially to ensure proper filtering when the page loads
+filterWarnings();
+
 </script>
 
 

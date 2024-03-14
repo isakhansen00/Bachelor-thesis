@@ -87,6 +87,17 @@
 
 <script>
     $(document).ready(function() {
+
+        function colorTable() {
+            $('#flight-table tbody tr').each(function() {
+                var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
+                if (nacpValue <= 9) {
+                    $(this).addClass('table-danger');
+                } else {
+                    $(this).removeClass('table-danger');
+                }
+             });
+        }
         // WebSocket connection for new flight data
         var socket = io.connect("http://" + document.domain + ":" + location.port);
     
@@ -123,6 +134,7 @@
                 $('#myModal #data-flight-callsign').text(data.callsign);
                 $('#myModal #data-flight-nacp').text(data.nacp);
             });
+            colorTable()
         });
     });
 </script>

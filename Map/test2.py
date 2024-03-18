@@ -12,7 +12,7 @@ def is_even(hex_value):
     return binary_msg[54] == '0'
 
 def read_dump1090_raw():
-    process = subprocess.Popen(['python', 'Testing/signals.py'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
     for line in process.stdout:
         hex_value = line.strip().replace("*", "").replace(";", "")

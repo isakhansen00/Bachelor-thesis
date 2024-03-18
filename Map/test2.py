@@ -7,8 +7,12 @@ import time
 
 flight_positions = {}  # Dictionary to store latest position for each flight
 
+def is_even(hex_value):
+    binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
+    return binary_msg[54] == '0'
+
 def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['python', 'Testing/signals.py'], stdout=subprocess.PIPE, universal_newlines=True)
     
     for line in process.stdout:
         hex_value = line.strip().replace("*", "").replace(";", "")
@@ -34,17 +38,17 @@ def process_hex_values(icao_address, hex_value):
             lat_ref, lon_ref = flight_positions[icao_address]
 
         try:
-            position = mps.adsb.airborne_position_with_ref(hex_value, lat_ref, lon_ref)
-            if position:
-                latitude, longitude = position
-                flight_positions[icao_address] = (latitude, longitude)  # Update latest position
-                print(f"Flight {flight_callsign} with ICAO {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                # Save longitude and latitude to the database along with other information
+            if is_even(hex_value):
+                position = mps.adsb.airborne_position_with_ref(hex_value, lat_ref, lon_ref)
+                if position:
+                    latitude, longitude = position
+                    flight_positions[icao_address] = (latitude, longitude)  # Update latest position
+                    print(f"Flight {flight_callsign} with ICAO {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                    # Save longitude and latitude to the database along with other information
         except RuntimeError:
             pass
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
-    # Remove the join() call to allow the main thread to continue running
-    # dump_thread.join()
+    dump_thread.join()

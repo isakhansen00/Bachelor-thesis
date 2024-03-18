@@ -5,4 +5,4 @@ class FlightDataClass():
         self.id = id
         self.icao = icao
         self.callsign = callsign
-        self.nacp = nacp
+        self.nacp = int(nacp)

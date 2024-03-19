@@ -9,14 +9,15 @@ flight_positions = {}  # Dictionary to store latest position for each flight
 
 def is_even(hex_value):
     binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
-    return binary_msg[54] == '0'
+    print(binary_msg[55])
+    return binary_msg[55] == '0'
 
 def read_dump1090_raw():
     process = subprocess.Popen(['python', 'Testing/signals.py'], stdout=subprocess.PIPE, universal_newlines=True)
     
     for line in process.stdout:
         hex_value = line.strip().replace("*", "").replace(";", "")
-        time.sleep(0.5)
+        time.sleep(0.1)
         icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
         if icao_address is not None:
             process_hex_values(icao_address, hex_value)  # Process the hex value for the ICAO address

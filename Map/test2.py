@@ -9,7 +9,7 @@ flight_positions = {}  # Dictionary to store latest position for each flight
 
 def is_even(hex_value):
     binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
-    return binary_msg[54] == '0'
+    return binary_msg[55] == '0'
 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)

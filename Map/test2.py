@@ -56,6 +56,7 @@ def process_hex_values(icao_address):
                 if position:
                     longitude, latitude = position
                     plane_positions[icao_address] = (longitude, latitude)
+                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
                     msg_even = None
                     msg_odd = None
                     t_even = None

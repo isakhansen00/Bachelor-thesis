@@ -66,8 +66,13 @@ def process_hex_values(icao_address):
 def generate_map():
     map = folium.Map(location=[0,0], zoom_start=2)
     
-    for icao_address, position in plane_positions.items():
-        folium.Marker(position, popup=f"Icao: {icao_address}").add_to(map)
+    for icao_address, positions in plane_positions.items():
+        for pos in positions:
+            folium.Marker(pos, popup=f"Icao: {icao_address}").add_to(map)
+        
+        # Draw polyline for the plane's path
+        if len(positions) > 1:
+            folium.PolyLine(positions, tooltip=f"Icao: {icao_address} Path").add_to(map)
     
     map.save("map.html")
 

@@ -29,7 +29,7 @@ def process_hex_values(icao_address, hex_value):
     except RuntimeError:
         pass
 
-    if flight_callsign:
+    if flight_callsign or not flight_callsign:
         if icao_address not in flight_positions:
             # If this is the first position message for this aircraft, use the reference location
             lat_ref, lon_ref = 14.38518, 67.28299  # Ground station reference location

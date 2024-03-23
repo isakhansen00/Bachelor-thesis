@@ -1,9 +1,10 @@
 import subprocess
 import pyModeS as mps
 import threading
-import json
 import time
-import folium
+import sys
+sys.path.insert(0, './Map')
+from map import generate_map
 
 hex_values_dict = {}
 flight_positions = {}
@@ -20,7 +21,8 @@ def read_dump1090_raw():
         if icao_address is not None:
             hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
             process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
-            
+    generate_map(flight_positions)
+
 def process_hex_values(icao_address):
     hex_values = hex_values_dict.get(icao_address, [])
     # print(f"Processing hex values for ICAO address {icao_address}")

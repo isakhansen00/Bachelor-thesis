@@ -59,7 +59,7 @@ def process_hex_values(icao_address):
                 if position:
                     longitude, latitude = position
                     if icao_address not in flight_positions:
-                        flight_positions[icao_address] = []
+                        flight_positions[icao_address] = [flight_callsign, ]
                     flight_positions[icao_address].append((longitude, latitude))
                     print(flight_positions)
                     print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")

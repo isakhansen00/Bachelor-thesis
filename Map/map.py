@@ -1,7 +1,11 @@
 import folium
 
 def generate_map(flight_positions):
-    map = folium.Map(location=[65, 10], zoom_start=5)
+    last_flight_id, last_points = list(flight_positions.items())[-1]  # Get the last flight's ID and points
+    last_point = last_points[-1]  # Get the last point of the last flight's path
+
+    map = folium.Map(location=last_point, zoom_start=7)
+
     for flight_id, points in flight_positions.items():
         folium.PolyLine(points[1:], color='black').add_to(map)
         last_point = points[-1]  # Get the last point of the flight path

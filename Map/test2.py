@@ -1,86 +1,16 @@
-import subprocess
-import pyModeS as mps
-import threading
-import json
 import folium
-import time
 
-hex_values_dict = {}
-plane_positions = {}
+flight_positions = {'4785bd': ["SAS1754", (66.69692734540519, 14.339779940518465), (66.69855667372882, 14.341902299360795), (66.70279292737023, 14.347645152698863)], '47875a': ["NOZ347__", (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818)]}
 
-def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
-    for line in process.stdout:
-        hex_value = line.strip()
-        hex_value = hex_value.replace("*", "")
-        hex_value = hex_value.replace(";", "")
-        
-        icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
-        if icao_address is not None:
-            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
-            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
-
-def process_hex_values(icao_address):
-    hex_values = hex_values_dict.get(icao_address, [])
-    
-    last_processed_index = getattr(process_hex_values, f"last_index_{icao_address}", 0)
-    new_hex_values = hex_values[last_processed_index:]
-    
-    flight_callsign = None
-    msg_even = None
-    msg_odd = None
-    t_even = None
-    t_odd = None
-    
-    for hex_value in new_hex_values:
-        try:
-            flight_callsign = mps.adsb.callsign(hex_value)
-        except RuntimeError:
-            pass
-
-        type_code_msg0 = mps.typecode(hex_value)
-        
-        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
-            binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
-            if binary_msg[55] == '0':
-                msg_even = hex_value
-                t_even = int(time.time())
-            elif binary_msg[55] == '1':
-                msg_odd = hex_value
-                t_odd = int(time.time())
-                
-        if flight_callsign and msg_even and msg_odd and t_even and t_odd:
-            try:
-                position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
-                if position:
-                    longitude, latitude = position
-                    plane_positions[icao_address] = (longitude, latitude)
-                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                    msg_even = None
-                    msg_odd = None
-                    t_even = None
-                    t_odd = None
-            except RuntimeError:
-                pass
-
-def generate_map():
-    map = folium.Map(location=[0,0], zoom_start=2)
-    
-    for icao_address, positions in plane_positions.items():
-        for pos in positions:
-            folium.Marker(pos, popup=f"Icao: {icao_address}").add_to(map)
-        
-        # Draw polyline for the plane's path
-        if len(positions) > 1:
-            folium.PolyLine(positions, tooltip=f"Icao: {icao_address} Path").add_to(map)
-    
+def generate_map(flight_positions):
+    map = folium.Map(location=[65, 10], zoom_start=5)
+    for flight_id, points in flight_positions.items():
+        folium.PolyLine(points[1:], color='black').add_to(map)
+        last_point = points[-1]  # Get the last point of the flight path
+        folium.Marker(location=last_point, 
+                      tooltip=points[0], 
+                      popup = 'ICAO: {}\nLongitude: {:.4f}\nLatitude: {:.4f}'.format(flight_id, last_point[0], last_point[1]), 
+                      icon=folium.Icon(color="blue", prefix="fa", icon="fa-plane")).add_to(map)
     map.save("map.html")
 
-if __name__ == "__main__":
-    dump_thread = threading.Thread(target=read_dump1090_raw)
-    dump_thread.start()
-    
-    while True:
-        generate_map()
-        time.sleep(60)
+generate_map(flight_positions)

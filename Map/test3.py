@@ -76,4 +76,4 @@ if __name__ == "__main__":
     while True:
         if len(flight_positions) > 1:
             generate_map(flight_positions)
-            time.sleep(20)
+            time.sleep(5)

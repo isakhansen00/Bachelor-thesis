@@ -8,10 +8,11 @@ from map import generate_map
 
 hex_values_dict = {}
 flight_positions = {}
- 
+test = 0
+
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    test = 0
+    
     if test < 30:
         for line in process.stdout:
             hex_value = line.strip()

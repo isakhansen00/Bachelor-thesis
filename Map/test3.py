@@ -77,7 +77,3 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
-
-    while True:
-        generate_map(flight_positions)
-        time.sleep(20)

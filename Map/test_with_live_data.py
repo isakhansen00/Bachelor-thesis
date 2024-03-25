@@ -60,6 +60,7 @@ def process_hex_values(icao_address):
                     if icao_address not in flight_positions:
                         flight_positions[icao_address] = [flight_callsign, ]
                     positions_for_icao = flight_positions[icao_address]
+                    # Checking if latitude and longitude is already in the position dictionary
                     if (longitude, latitude) not in positions_for_icao:
                         flight_positions[icao_address].append((longitude, latitude))
                     #print(flight_positions)

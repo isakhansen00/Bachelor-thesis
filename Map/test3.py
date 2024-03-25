@@ -12,7 +12,7 @@ flight_positions = {}
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     test = 0
-    if test == 30:
+    if test < 30:
         for line in process.stdout:
             hex_value = line.strip()
             hex_value = hex_value.replace("*", "")
@@ -21,6 +21,7 @@ def read_dump1090_raw():
             icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
             if icao_address is not None:
                 hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
+                test += 1
                 process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
     else:
         generate_map(flight_positions)

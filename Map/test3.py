@@ -24,6 +24,7 @@ def read_dump1090_raw():
                 test += 1
                 process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
     else:
+        print("JAJAJAJAJAJAJAJAJAJAJJA")
         generate_map(flight_positions)
         test = 0
 

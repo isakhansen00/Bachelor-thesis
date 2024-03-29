@@ -8,6 +8,7 @@ from map import generate_map
 
 hex_values_dict = {}
 flight_positions = {}
+flight_data = {}
  
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
@@ -29,10 +30,10 @@ def process_hex_values(icao_address):
     new_hex_values = hex_values[last_processed_index:]
     
     flight_callsign = None
-    msg_even = None
-    msg_odd = None
-    t_even = None
-    t_odd = None
+    # msg_even = None
+    # msg_odd = None
+    # t_even = None
+    # t_odd = None
     
     for hex_value in new_hex_values:
         
@@ -42,19 +43,28 @@ def process_hex_values(icao_address):
             pass
 
         type_code_msg0 = mps.typecode(hex_value)
+
+        if icao_address not in flight_data:
+                        flight_data[icao_address] = [None, None, None, None]
         
         if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
             binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
             if binary_msg[55] == '0':
-                msg_even = hex_value
-                t_even = int(time.time())
+                # msg_even = hex_value
+                # t_even = int(time.time())
+                flight_data[icao_address][0] = hex_value
+                flight_data[icao_address][1] = int(time.time())
             elif binary_msg[55] == '1':
-                msg_odd = hex_value
-                t_odd = int(time.time())
+                # msg_odd = hex_value
+                # t_odd = int(time.time())
+                flight_data[icao_address][2] = hex_value
+                flight_data[icao_address][3] = int(time.time())
                 
-        if flight_callsign and msg_even and msg_odd and t_even and t_odd:
+        #if flight_callsign and msg_even and msg_odd and t_even and t_odd:
+        if flight_callsign and flight_data[icao_address][0] and flight_data[icao_address][2] and flight_data[icao_address][1] and flight_data[icao_address][3]:
             try:
-                position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
+                # position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
+                position = mps.adsb.airborne_position(flight_data[icao_address][0], flight_data[icao_address][2], flight_data[icao_address][1], flight_data[icao_address][3])
                 if position:
                     longitude, latitude = position
                     if icao_address not in flight_positions:
@@ -65,10 +75,14 @@ def process_hex_values(icao_address):
                         flight_positions[icao_address].append((longitude, latitude))
                     #print(flight_positions)
                     print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                    msg_even = None
-                    msg_odd = None
-                    t_even = None
-                    t_odd = None
+                    # msg_even = None
+                    # msg_odd = None
+                    # t_even = None
+                    # t_odd = None
+                    flight_data[icao_address][0] = None
+                    flight_data[icao_address][1] = None
+                    flight_data[icao_address][2] = None
+                    flight_data[icao_address][3] = None
             except RuntimeError:
                 pass
 

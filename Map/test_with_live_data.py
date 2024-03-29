@@ -65,7 +65,7 @@ def process_hex_values(icao_address):
             even_timestamp = flight_data[icao_address][1]
             odd_timestamp = flight_data[icao_address][3]
             time_difference = abs(even_timestamp - odd_timestamp)
-            if time_difference <= 10:
+            if time_difference < 15:
                 try:
                     # position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
                     position = mps.adsb.airborne_position(flight_data[icao_address][0], flight_data[icao_address][2], flight_data[icao_address][1], flight_data[icao_address][3])

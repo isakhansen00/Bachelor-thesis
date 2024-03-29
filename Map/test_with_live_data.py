@@ -62,31 +62,37 @@ def process_hex_values(icao_address):
                 
         #if flight_callsign and msg_even and msg_odd and t_even and t_odd:
         if flight_callsign is not None and None not in flight_data[icao_address]:
-            try:
-                # position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
-                position = mps.adsb.airborne_position(flight_data[icao_address][0], flight_data[icao_address][2], flight_data[icao_address][1], flight_data[icao_address][3])
-                if position:
-                    longitude, latitude = position
-                    if icao_address not in flight_positions:
-                        flight_positions[icao_address] = [flight_callsign, ]
-                    positions_for_icao = flight_positions[icao_address]
-                    # Checking if latitude and longitude is already in the position dictionary
-                    if (longitude, latitude) not in positions_for_icao:
-                        flight_positions[icao_address].append((longitude, latitude))
-                    #print(flight_positions)
-                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                    # msg_even = None
-                    # msg_odd = None
-                    # t_even = None
-                    # t_odd = None
-                    print(len(flight_data))
-                    if icao_address in flight_data:
-                        del flight_data[icao_address]
-                    if icao_address.upper() in flight_data:
-                        del flight_data[icao_address.upper()]
-                    print(len(flight_data))
-            except RuntimeError:
-                pass
+            even_timestamp = flight_data[icao_address][1]
+            odd_timestamp = flight_data[icao_address][3]
+            time_difference = abs(even_timestamp - odd_timestamp)
+            if time_difference <= 10:
+                try:
+                    # position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
+                    position = mps.adsb.airborne_position(flight_data[icao_address][0], flight_data[icao_address][2], flight_data[icao_address][1], flight_data[icao_address][3])
+                    if position:
+                        longitude, latitude = position
+                        if icao_address not in flight_positions:
+                            flight_positions[icao_address] = [flight_callsign, ]
+                        positions_for_icao = flight_positions[icao_address]
+                        # Checking if latitude and longitude is already in the position dictionary
+                        if (longitude, latitude) not in positions_for_icao:
+                            flight_positions[icao_address].append((longitude, latitude))
+                        #print(flight_positions)
+                        print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
+                        # msg_even = None
+                        # msg_odd = None
+                        # t_even = None
+                        # t_odd = None
+                        print(len(flight_data))
+                        if icao_address in flight_data:
+                            del flight_data[icao_address]
+                        if icao_address.upper() in flight_data:
+                            del flight_data[icao_address.upper()]
+                        print(len(flight_data))
+                except RuntimeError:
+                    pass
+            else:
+                del flight_data[icao_address]
 
 # Function to periodically check and remove stale entries from flight_data
 def check_stale_entries():

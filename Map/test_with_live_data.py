@@ -61,7 +61,7 @@ def process_hex_values(icao_address):
                 flight_data[icao_address][3] = int(time.time())
                 
         #if flight_callsign and msg_even and msg_odd and t_even and t_odd:
-        if flight_callsign and flight_data[icao_address][0] and flight_data[icao_address][2] and flight_data[icao_address][1] and flight_data[icao_address][3]:
+        if flight_callsign is not None and None not in flight_data[icao_address]:
             try:
                 # position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
                 position = mps.adsb.airborne_position(flight_data[icao_address][0], flight_data[icao_address][2], flight_data[icao_address][1], flight_data[icao_address][3])

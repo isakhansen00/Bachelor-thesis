@@ -79,18 +79,36 @@ def process_hex_values(icao_address):
                     # msg_odd = None
                     # t_even = None
                     # t_odd = None
-                    flight_data[icao_address][0] = None
-                    flight_data[icao_address][1] = None
-                    flight_data[icao_address][2] = None
-                    flight_data[icao_address][3] = None
+                    print(len(flight_data))
+                    if icao_address in flight_data:
+                        del flight_data[icao_address]
+                    if icao_address.upper() in flight_data:
+                        del flight_data[icao_address.upper()]
+                    print(len(flight_data))
             except RuntimeError:
                 pass
 
+# Function to periodically check and remove stale entries from flight_data
+def check_stale_entries():
+    while True:
+        current_time = time.time()
+        stale_threshold = 300  # 5 minutes (300 seconds)
+
+        for icao_address, data in list(flight_data.items()):  # Use list() to avoid modifying dictionary during iteration
+            # Check if both even and odd messages are None and the last update time is older than the stale threshold
+            if data[2] is None or data[3] is None and current_time - data[1] > stale_threshold:
+                del flight_data[icao_address]  # Remove stale entry
+                print("DONE")
+
+        time.sleep(60)  # Check every minute
+
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
+    stale_entries_thread = threading.Thread(target=check_stale_entries)
     dump_thread.start()
+    stale_entries_thread.start()
 
     while True:
-        if len(flight_positions) > 1:
+        if len(flight_positions) > 0:
             generate_map(flight_positions)
             time.sleep(5)

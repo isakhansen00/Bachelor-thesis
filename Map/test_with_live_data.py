@@ -9,19 +9,25 @@ from map import generate_map
 hex_values_dict = {}
 flight_positions = {}
 flight_data = {}
+
+# File path to store hex values
+hex_file_path = "./"
  
 def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
-    for line in process.stdout:
-        hex_value = line.strip()
-        hex_value = hex_value.replace("*", "")
-        hex_value = hex_value.replace(";", "")
-        # print("Received ADS-B signal:", hex_value)
-        icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
-        if icao_address is not None:
-            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
-            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
+    with open(hex_file_path, "a") as hex_file:
+        process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
+        
+        for line in process.stdout:
+            hex_value = line.strip()
+            hex_value = hex_value.replace("*", "")
+            hex_value = hex_value.replace(";", "")
+            hex_file.write(hex_value + "\n")
+            hex_file.flush()  # Flush the buffer to ensure immediate writing
+            # print("Received ADS-B signal:", hex_value)
+            icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
+            if icao_address is not None:
+                hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
+                process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
 
 def process_hex_values(icao_address):
     hex_values = hex_values_dict.get(icao_address, [])

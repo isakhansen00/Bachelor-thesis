@@ -83,7 +83,10 @@ def process_hex_values(icao_address):
                         if (longitude, latitude) not in positions_for_icao:
                             flight_positions[icao_address].append((longitude, latitude))
                         #print(flight_positions)
-                        print(f"NACp {nac_p}")
+                        try:
+                            print(f"NACp {nac_p}")
+                        except:
+                            pass
                         print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
                         # msg_even = None
                         # msg_odd = None

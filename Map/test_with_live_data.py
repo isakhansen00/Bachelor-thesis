@@ -11,7 +11,7 @@ flight_positions = {}
 flight_data = {}
 
 # File path to store hex values
-hex_file_path = "./"
+hex_file_path = "./hex.txt"
  
 def read_dump1090_raw():
     with open(hex_file_path, "a") as hex_file:

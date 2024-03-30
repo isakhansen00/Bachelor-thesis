@@ -36,6 +36,11 @@ def process_hex_values(icao_address):
     # t_odd = None
     
     for hex_value in new_hex_values:
+
+        try:
+            nac_p = mps.decoder.adsb.nac_p(hex_value)
+        except RuntimeError:
+            pass
         
         try:
             flight_callsign = mps.adsb.callsign(hex_value)
@@ -78,6 +83,7 @@ def process_hex_values(icao_address):
                         if (longitude, latitude) not in positions_for_icao:
                             flight_positions[icao_address].append((longitude, latitude))
                         #print(flight_positions)
+                        print(f"NACp {nac_p}")
                         print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
                         # msg_even = None
                         # msg_odd = None

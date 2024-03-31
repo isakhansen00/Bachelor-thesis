@@ -58,7 +58,7 @@ def process_hex_values(icao_address):
         if icao_address not in flight_data:
                         flight_data[icao_address] = [None, None, None, None]
         
-        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
+        if type_code_msg0 in [20, 21, 22]:
             binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
             if binary_msg[55] == '0':
                 # msg_even = hex_value

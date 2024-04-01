@@ -12,7 +12,7 @@ flight_positions = {}
 flight_data = {}
  
 def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw --net'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw', '--net'], stdout=subprocess.PIPE, universal_newlines=True)
         
     for line in process.stdout:
         hex_value = line.strip()

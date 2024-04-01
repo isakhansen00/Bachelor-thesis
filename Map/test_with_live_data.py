@@ -52,7 +52,7 @@ def process_hex_values(icao_address):
                 nac_p = mps.decoder.adsb.nac_p(hex_value)
             except RuntimeError:
                 pass
-            if nac_p > 9:
+            if nac_p and nac_p > 9:
                 try:
                     flight_callsign = mps.adsb.callsign(hex_value)
                 except RuntimeError:

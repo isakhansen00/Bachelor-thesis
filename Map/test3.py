@@ -46,8 +46,18 @@ def fetch_airplane_data():
         if response.status_code == 200:
             data = response.json()
             for airplane in data:
-                print(data)
-                pass
+                hex_value = airplane["hex"]
+                lat = airplane["lat"]
+                lon = airplane["lon"]
+
+                # If ICAO address already exists in dictionary, append new coordinates if they are unique
+                if hex_value in flight_positions:
+                    if (lat, lon) not in flight_positions[hex_value]:
+                        flight_positions[hex_value].append((lat, lon))
+                else:
+                    flight_positions[hex_value] = [(lat, lon)]
+                
+                print(flight_positions)
         else:
             print("Failed to fetch data:", response.status_code)
     except Exception as e:

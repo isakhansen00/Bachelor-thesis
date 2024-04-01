@@ -24,10 +24,13 @@ def read_dump1090_raw():
             hex_file.write(hex_value + "\n")
             hex_file.flush()  # Flush the buffer to ensure immediate writing
             # print("Received ADS-B signal:", hex_value)
-            icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
-            if icao_address is not None:
-                hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
-                process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
+            if len(hex_value) == 28:
+                if mps.df(hex_value) == 17:
+                    if mps.crc(hex_value) == 0:
+                        icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
+                        if icao_address is not None:
+                            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
+                            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
 
 def process_hex_values(icao_address):
     hex_values = hex_values_dict.get(icao_address, [])

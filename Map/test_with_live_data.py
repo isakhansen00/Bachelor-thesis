@@ -41,6 +41,7 @@ def process_hex_values(icao_address):
         new_hex_values = hex_values[last_processed_index:]
         
         flight_callsign = None
+        nac_p = None
         # msg_even = None
         # msg_odd = None
         # t_even = None

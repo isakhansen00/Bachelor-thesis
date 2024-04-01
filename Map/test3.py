@@ -57,7 +57,7 @@ def fetch_airplane_data():
                 else:
                     flight_positions[hex_value] = [(lat, lon)]
                 
-                print(flight_positions)
+            print(flight_positions)
         else:
             print("Failed to fetch data:", response.status_code)
     except Exception as e:

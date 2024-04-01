@@ -114,17 +114,20 @@ def check_stale_entries():
     while True:
         current_time = time.time()
         stale_threshold = 300  # 5 minutes (300 seconds)
+        stale_entries = []
 
-        for icao_address, data in list(flight_data.items()):  # Use list() to avoid modifying dictionary during iteration
-            # Check if the list only contains None
-            if all(value is None for value in data):
-                del flight_data[icao_address] # Remove stale entry
-            # Check if only even message and time is over threshold
-            elif data[0] is not None and data[2] is None and (current_time - data[1] > stale_threshold):
-                del flight_data[icao_address]  # Remove stale entry
-            # Check if only odd message and time is over threshold
-            elif data[0] is None and data[2] is not None and (current_time - data[1] > stale_threshold):
-                del flight_data[icao_address]  # Remove stale entry
+        for icao_address, data in flight_data.items():
+            if all(value is None for value in data) or \
+               (data[0] is not None and data[2] is None) or \
+               (data[0] is None and data[2] is not None):
+                if (all(value is None for value in data) or \
+                    (data[0] is not None and current_time - data[1] > stale_threshold) or \
+                    (data[2] is not None and current_time - data[3] > stale_threshold)):
+                    stale_entries.append(icao_address)
+
+        for icao_address in stale_entries:
+            del flight_data[icao_address]
+            print("DONE")
 
         time.sleep(60)  # Check every minute
 

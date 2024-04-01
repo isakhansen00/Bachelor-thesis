@@ -68,6 +68,7 @@ if __name__ == "__main__":
     dump_thread.start()
 
     while True:
+        time.sleep(5)
         # Fetch airplane data periodically
         fetch_airplane_data()
         time.sleep(15)

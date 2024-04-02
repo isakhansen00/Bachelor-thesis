@@ -5,9 +5,12 @@ import json
 from azure.iot.device import IoTHubDeviceClient, Message
 
 hex_values_dict = {}
+flight_trips = {}
+
 CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
 MSG_SND = ''
-client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)  
+client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING) 
+ 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     

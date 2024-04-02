@@ -29,16 +29,6 @@ flight_data_list = []
 #     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
 #     flight_data_list.append(flight_data)
 
-# # Function to periodically check staging table for new data
-# def check_staging_table():
-#     while True:
-
-#         new_data = get_new_data_from_staging_table()
-#         if new_data:
-#             for flight_data in new_data:
-#                 process_and_insert_into_main_table(flight_data)
-#                 check_nacp_threshold(flight_data)
-#         socketio.sleep(2)
 
 def get_new_data_from_staging_table():
     cursor2 = db.cursor()

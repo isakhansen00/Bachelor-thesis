@@ -39,6 +39,7 @@ def process_hex_values(icao_address):
         except RuntimeError:
             pass
 
+"""
 def fetch_airplane_data():
     try:
         response = requests.get("http://localhost:8080/data.json")
@@ -61,13 +62,16 @@ def fetch_airplane_data():
             print("Failed to fetch data:", response.status_code)
     except Exception as e:
         print("An error occurred while fetching data:", e)
+"""
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
 
+"""
     while True:
         time.sleep(5)
         # Fetch airplane data periodically
         fetch_airplane_data()
         time.sleep(15)
+"""

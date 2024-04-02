@@ -1,73 +1,73 @@
 import subprocess
 import pyModeS as mps
 import threading
-import json
-from azure.iot.device import IoTHubDeviceClient, Message
 import time
+import sys
+sys.path.insert(0, './Map')
+from map import generate_map
+import requests
 
-# Dictionary to store state for each aircraft
-aircraft_state = {}
-
+hex_values_dict = {}
+flight_positions = {}
+ 
 def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw', '--net'], stdout=subprocess.PIPE, universal_newlines=True)
+        
     for line in process.stdout:
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
         icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
         if icao_address is not None:
-            aircraft_state.setdefault(icao_address, {}).setdefault('hex_values', []).append(hex_value)  # Append hex values for the ICAO address
-            process_hex_values(icao_address)  # Process hex values for the ICAO address
+            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
+            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
 
 def process_hex_values(icao_address):
-    state = aircraft_state.get(icao_address, {})
-    hex_values = state.get('hex_values', [])
-    last_processed_index = state.get('last_processed_index', 0)
+    hex_values = hex_values_dict.get(icao_address, [])
+    last_processed_index = getattr(process_hex_values, f"last_index_{icao_address}", 0)
     new_hex_values = hex_values[last_processed_index:]
-    
-    flight_callsign = None
-    nac_p = None
-    msg_even = None
-    msg_odd = None
-    t_even = None
-    t_odd = None
-    
+        
     for hex_value in new_hex_values:
+
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
         except RuntimeError:
             pass
-        
+            
         try:
             flight_callsign = mps.adsb.callsign(hex_value)
         except RuntimeError:
             pass
 
-        type_code_msg0 = mps.typecode(hex_value)
-        
-        if type_code_msg0 in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22]:
-            binary_msg = bin(int(hex_value, 16))[2:].zfill(112)
-            if binary_msg[54] == '0':
-                msg_even = hex_value
-                t_even = int(time.time())
-            elif binary_msg[54] == '1':
-                msg_odd = hex_value
-                t_odd = int(time.time())
+def fetch_airplane_data():
+    try:
+        response = requests.get("http://localhost:8080/data.json")
+        if response.status_code == 200:
+            data = response.json()
+            for airplane in data:
+                hex_value = airplane["hex"]
+                lat = airplane["lat"]
+                lon = airplane["lon"]
+
+                # If ICAO address already exists in dictionary, append new coordinates if they are unique
+                if hex_value in flight_positions:
+                    if (lat, lon) not in flight_positions[hex_value]:
+                        flight_positions[hex_value].append((lat, lon))
+                else:
+                    flight_positions[hex_value] = [(lat, lon)]
                 
-        if flight_callsign and msg_even and msg_odd and t_even and t_odd:
-            try:
-                position = mps.adsb.airborne_position(msg_even, msg_odd, t_even, t_odd)
-                if position:
-                    longitude, latitude = position
-                    print(f"Flight {flight_callsign} with icao {icao_address} has position: LO: {longitude}, LA: {latitude}")
-            except RuntimeError:
-                pass
-    
-    # Update the last processed index for this aircraft
-    aircraft_state[icao_address]['last_processed_index'] = len(hex_values)
+            print(flight_positions)
+        else:
+            print("Failed to fetch data:", response.status_code)
+    except Exception as e:
+        print("An error occurred while fetching data:", e)
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
-    dump_thread.join()
+
+    while True:
+        time.sleep(5)
+        # Fetch airplane data periodically
+        fetch_airplane_data()
+        time.sleep(15)

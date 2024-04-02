@@ -1,54 +1,16 @@
-import subprocess
-import pyModeS as mps
-import threading
-import time
+import folium
 
-# Position antenna: LO:67.28299 LA: 14.38518
+flight_positions = {'4785bd': ["SAS1754", (66.69692734540519, 14.339779940518465), (66.69855667372882, 14.341902299360795), (66.70279292737023, 14.347645152698863)], '47875a': ["NOZ347__", (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818), (66.86893786414194, 14.25962968306108), (66.85967396881621, 14.252263849431818)]}
 
-flight_positions = {}  # Dictionary to store latest position for each flight
+def generate_map(flight_positions):
+    map = folium.Map(location=[65, 10], zoom_start=5)
+    for flight_id, points in flight_positions.items():
+        folium.PolyLine(points[1:], color='black').add_to(map)
+        last_point = points[-1]  # Get the last point of the flight path
+        folium.Marker(location=last_point, 
+                      tooltip=points[0], 
+                      popup = 'ICAO: {}\nLongitude: {:.4f}\nLatitude: {:.4f}'.format(flight_id, last_point[0], last_point[1]), 
+                      icon=folium.Icon(color="blue", prefix="fa", icon="fa-plane")).add_to(map)
+    map.save("map.html")
 
-def is_even(hex_value):
-    binary_msg = bin(int(hex_value, 16))[2:].zfill(112)  # Convert hex to binary
-    return binary_msg[55] == '0'
-
-def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
-    for line in process.stdout:
-        hex_value = line.strip().replace("*", "").replace(";", "")
-        time.sleep(0.5)
-        icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
-        if icao_address is not None:
-            process_hex_values(icao_address, hex_value)  # Process the hex value for the ICAO address
-
-def process_hex_values(icao_address, hex_value):
-    flight_callsign = None
-    
-    try:
-        flight_callsign = mps.adsb.callsign(hex_value)
-    except RuntimeError:
-        pass
-
-    if flight_callsign or not flight_callsign:
-        if icao_address not in flight_positions:
-            # If this is the first position message for this aircraft, use the reference location
-            lat_ref, lon_ref = 14.38518, 67.28299  # Ground station reference location
-        else:
-            # Otherwise, use the latest known position as reference
-            lat_ref, lon_ref = flight_positions[icao_address]
-
-        try:
-            if is_even(hex_value):
-                position = mps.adsb.airborne_position_with_ref(hex_value, lat_ref, lon_ref)
-                if position:
-                    latitude, longitude = position
-                    flight_positions[icao_address] = (latitude, longitude)  # Update latest position
-                    print(f"Flight {flight_callsign} with ICAO {icao_address} has position: LO: {longitude}, LA: {latitude}")
-                    # Save longitude and latitude to the database along with other information
-        except RuntimeError:
-            pass
-
-if __name__ == "__main__":
-    dump_thread = threading.Thread(target=read_dump1090_raw)
-    dump_thread.start()
-    dump_thread.join()
+generate_map(flight_positions)

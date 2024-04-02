@@ -1,10 +1,13 @@
+import time
 import pyodbc
 from credentials import *
 from flightdata import FlightDataClass
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 from threading import Lock
-from requests import request
+# from requests import request
+import sys
+sys.path.insert(0, 'Map')
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -25,6 +28,8 @@ rows = cursor.fetchall()
 cursor.close()
 
 flight_data_list = []
+unique_icao_addresses = set()
+
 # for row in rows:
 #     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
 #     flight_data_list.append(flight_data)
@@ -70,10 +75,26 @@ def check_nacp_threshold():
                      socketio.sleep(2)
 
 def process_and_insert_into_main_table(flight_data):
-    cursor3 = db.cursor()
-    cursor3.execute("INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp) VALUES (?, ?, ?)", (flight_data.icao, flight_data.callsign, flight_data.nacp))
+    print(unique_icao_addresses)
+    cursor3 = db.cursor()  # Initialize cursor here
+    if flight_data.icao not in unique_icao_addresses:
+        print("TEST1")
+        cursor3.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (?, ?)", (flight_data.icao, time.time()))
+        print("TEST2")
+        db.commit()
+        cursor3.close()
+        unique_icao_addresses.add(flight_data.icao) 
+        print("TEST3")
+    cursor3 = db.cursor()  # Reinitialize cursor after closing
+    cursor3.execute("""
+        INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp, TripID)
+        SELECT ?, ?, ?, ft.TripID
+        FROM dbo.FlightTrips ft
+        WHERE ft.ICAO = ?
+        """, (flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao))
     db.commit()
     cursor3.close()
+
     print(flight_data.callsign)
     
     socketio.emit('new_flight_data', {
@@ -99,7 +120,19 @@ def index():
         flight_data_list.append(flight_data)
     numberOfItems = len(flight_data_list)
     cursor4.close()
+
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
+
+@app.route('/get_position_data', methods=['GET'])
+def get_position_data():
+    flight_positions = {'4783cc': ["SAS1754", (66.69692734540519, 14.339779940518465), (66.69855667372882, 14.341902299360795), (66.70279292737023, 14.347645152698863)]}
+    icao = request.args.get('icao')  # Get ICAO value from request parameters
+    if icao in flight_positions:
+        points = flight_positions[icao][1:]  # Extract position data from dictionary
+        return jsonify({'success': True, 'points': points})
+    else:
+        return jsonify({'success': False, 'message': 'ICAO value not found'})
+
 
 """
 Decorator for connect

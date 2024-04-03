@@ -6,8 +6,8 @@ import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_position import fetch_airplane_data
-# sys.path.insert(0, './UI')
-from ..UI.main import save_flight_positions
+# sys.path.insert(0, './Tools')
+from Tools import save_flight_positions
 
 hex_values_dict = {}
 flight_trips = {}

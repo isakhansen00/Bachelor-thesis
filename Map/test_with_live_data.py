@@ -115,6 +115,7 @@ def process_hex_values(icao_address):
 
 # Function to periodically check and remove stale entries from flight_data
 def check_stale_entries():
+    time.sleep(5)
     while True:
         current_time = time.time()
         stale_threshold = 300  # 5 minutes (300 seconds)

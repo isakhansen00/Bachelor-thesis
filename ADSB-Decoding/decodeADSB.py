@@ -6,8 +6,6 @@ import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_position import fetch_airplane_data
-sys.path.insert(0, '../Tools')
-from database_queries import save_flight_positions
 
 hex_values_dict = {}
 flight_trips = {}
@@ -76,5 +74,29 @@ if __name__ == "__main__":
         time.sleep(5)
         flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
         print(flight_positions)
-        save_flight_positions(flight_positions)  # Save the data to the database
+        for icao_address, positions in flight_positions.items():
+        # Extract ICAO address from the dictionary
+            icao = icao_address
+
+            # Iterate over positions for each ICAO address
+            for position in positions:
+                # Extract latitude and longitude
+                latitude, longitude = position
+
+                # Create message data
+                message_data = {
+                    "ICAO": icao,
+                    "Longitude": longitude,
+                    "Latitude": latitude
+                }
+
+                # Convert message data to JSON
+                message = json.dumps(message_data)
+
+                # Send message to Azure IoT Hub
+                client.send_message(message)
+
+                # Print sent message for debugging (optional)
+                print(f"Message sent: {message}")
+        #client.send_message(flight_positions)
         time.sleep(10)  # Sleep for 10 seconds before fetching again

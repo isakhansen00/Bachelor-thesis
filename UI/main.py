@@ -5,7 +5,6 @@ from flightdata import FlightDataClass
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 from threading import Lock
-# from requests import request
 import sys
 sys.path.insert(0, 'Map')
 
@@ -59,7 +58,7 @@ def check_nacp_threshold():
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
-                 insert_trip_id_to_flight_position(flight_data2)
+                 insert_trip_id_to_flight_position(flight_data2)  # Insert trip ID to positions in FlightTripPositions table in the database.
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
@@ -92,6 +91,8 @@ def process_and_insert_into_main_table(flight_data):
         'nacp': flight_data.nacp
     })
 
+# Retrieves the latest trip ID associated with a given ICAO code from the FlightTrips table in the database.
+# Returns: None
 def get_latest_trip_id(icao_address):
     cursor5 = db.cursor()
     cursor5.execute("""
@@ -108,6 +109,9 @@ def get_latest_trip_id(icao_address):
     cursor5.close()
     return trip_id[0] if trip_id else None
 
+# Inserts the latest trip ID associated with a flight's ICAO code into the FlightTripPositions table in the database.
+# Returns:
+#   - The latest trip ID associated with the given ICAO address if found, else returns None.
 def insert_trip_id_to_flight_position(flight_data):
     trip_id = get_latest_trip_id(flight_data.icao)
     cursor6 = db.cursor()
@@ -130,20 +134,22 @@ def index():
 
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
+# Retrieves flight positions data based on provided ID and ICAO values.
+# Returns:
+#   - JSON response containing success status and points data if positions are found, 
+#     otherwise returns a failure status with an appropriate message.
 @app.route('/get_position_data', methods=['GET'])
 def get_position_data():
-    id = request.args.get('id')
-    print(id)
+    id = request.args.get('id')  # Get ID value from request parameters
     icao = request.args.get('icao')  # Get ICAO value from request parameters
 
     cursor7 = db.cursor()
 
-    # Retrieve TripID based on the provided ICAO
+    # Retrieve TripID from FlightDataNew table in database based on the provided ID
     cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (id,))
     row = cursor7.fetchone()
     if row:
         trip_id = row[0]
-        print(trip_id)
         
         # Fetch positions based on ICAO and TripID
         cursor7.execute("SELECT Longitude, Latitude FROM FlightTripPositions WHERE ICAO = ? AND TripID = ?", (icao, trip_id))
@@ -154,9 +160,7 @@ def get_position_data():
         # Construct dictionary
         if positions:
             flight_positions = {icao: [(float(pos[1]), float(pos[0])) for pos in positions]}
-            print(flight_positions)
             points = flight_positions[icao]  # Extract position data from dictionary
-            print(points)
             return jsonify({'success': True, 'points': points})
         else:
             return jsonify({'success': False, 'message': 'No positions found for the given ICAO and TripID'})

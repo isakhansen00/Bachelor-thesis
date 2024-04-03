@@ -1,3 +1,4 @@
+import sys
 sys.path.insert(0, '../UI')
 from credentials import *
 import pyodbc

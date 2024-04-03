@@ -1,5 +1,4 @@
 import time
-import sys
 import subprocess
 import pyModeS as mps
 import threading
@@ -8,7 +7,6 @@ from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_position import fetch_airplane_data
 
 hex_values_dict = {}
-flight_trips = {}
 
 CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
 MSG_SND = ''
@@ -71,6 +69,10 @@ if __name__ == "__main__":
     dump_thread.start()
     #dump_thread.join()
 
+    # Continuously fetches airplane data every 5 seconds using the fetch_airplane_data() function.
+    # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 
+    # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
+    # The process repeats every 15 seconds.
     while True:
         time.sleep(5)
         flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
@@ -100,5 +102,4 @@ if __name__ == "__main__":
 
                 # Print sent message for debugging (optional)
                 print(f"Message sent: {message}")
-        #client.send_message(flight_positions)
         time.sleep(10)  # Sleep for 10 seconds before fetching again

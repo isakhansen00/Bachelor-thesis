@@ -6,8 +6,7 @@ import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_position import fetch_airplane_data
-sys.path.insert(0, './UI')
-from main import save_flight_positions
+from UI.main import save_flight_positions
 
 hex_values_dict = {}
 flight_trips = {}
@@ -17,7 +16,7 @@ MSG_SND = ''
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING) 
  
 def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw', '--net'], stdout=subprocess.PIPE, universal_newlines=True)
     
     for line in process.stdout:
         hex_value = line.strip()

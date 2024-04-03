@@ -1,4 +1,6 @@
+sys.path.insert(0, '../UI')
 from credentials import *
+import pyodbc
 
 db = pyodbc.connect('DRIVER=' + driver + ';SERVER=' +
     server + ';PORT=1433;DATABASE=' + database +

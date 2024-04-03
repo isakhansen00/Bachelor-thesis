@@ -1,8 +1,13 @@
+import time
+import sys
 import subprocess
 import pyModeS as mps
 import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
+from fetch_airplane_position import fetch_airplane_data
+sys.path.insert(0, './UI')
+from main import save_flight_positions
 
 hex_values_dict = {}
 flight_trips = {}
@@ -66,3 +71,10 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     dump_thread.join()
+
+    while True:
+        time.sleep(5)
+        flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
+        print(flight_positions)
+        save_flight_positions(flight_positions)  # Save the data to the database
+        time.sleep(10)  # Sleep for 10 seconds before fetching again

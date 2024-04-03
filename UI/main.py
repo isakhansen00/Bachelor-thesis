@@ -135,6 +135,7 @@ def index():
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
 # Retrieves flight positions data based on provided ID and ICAO values.
+# This function gets called from index.html when a modal gets opened 
 # Returns:
 #   - JSON response containing success status and points data if positions are found, 
 #     otherwise returns a failure status with an appropriate message.

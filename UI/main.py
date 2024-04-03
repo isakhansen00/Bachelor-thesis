@@ -59,6 +59,7 @@ def check_nacp_threshold():
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
+                 insert_trip_id_to_flight_position(flight_data2)
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
@@ -68,13 +69,10 @@ def process_and_insert_into_main_table(flight_data):
     print(unique_icao_addresses)
     cursor3 = db.cursor()  # Initialize cursor here
     if flight_data.icao not in unique_icao_addresses:
-        #print("TEST1")
         cursor3.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (?, ?)", (flight_data.icao, time.time()))
-        #print("TEST2")
         db.commit()
         cursor3.close()
         unique_icao_addresses.add(flight_data.icao) 
-        #print("TEST3")
     cursor3 = db.cursor()  # Reinitialize cursor after closing
     cursor3.execute("""
         INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp, TripID)
@@ -83,7 +81,6 @@ def process_and_insert_into_main_table(flight_data):
         WHERE ft.ICAO = ?
         """, (flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao))
     db.commit()
-    print("Kom vi hit?")
     cursor3.close()
 
     print(flight_data.callsign)
@@ -95,8 +92,27 @@ def process_and_insert_into_main_table(flight_data):
         'nacp': flight_data.nacp
     })
 
-    # Update flight_data_list
-    flight_data_list.append(flight_data)
+def get_latest_trip_id(icao_address):
+    cursor5 = db.cursor()
+    cursor5.execute("""
+        SELECT TripID 
+        FROM FlightTrips 
+        WHERE ICAO = ? 
+        AND TripTimestamp = (
+            SELECT MAX(TripTimestamp) 
+            FROM FlightTrips 
+            WHERE ICAO = ?
+        )
+    """, (icao_address, icao_address))
+    trip_id = cursor5.fetchone()
+    cursor5.close()
+    return trip_id[0] if trip_id else None
+
+def insert_trip_id_to_flight_position(flight_data):
+    trip_id = get_latest_trip_id(flight_data.icao)
+    cursor6 = db.cursor()
+    cursor6.execute("UPDATE dbo.FlightTripPosition SET TripID = ? WHERE ICAO = ?", (trip_id, flight_data.icao))
+    cursor6.close()
 
 @app.route("/")
 def index():

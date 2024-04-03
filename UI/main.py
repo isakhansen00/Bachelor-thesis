@@ -111,7 +111,7 @@ def get_latest_trip_id(icao_address):
 def insert_trip_id_to_flight_position(flight_data):
     trip_id = get_latest_trip_id(flight_data.icao)
     cursor6 = db.cursor()
-    cursor6.execute("UPDATE dbo.FlightTripPosition SET TripID = ? WHERE ICAO = ?", (trip_id, flight_data.icao))
+    cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, flight_data.icao))
     cursor6.close()
 
 @app.route("/")

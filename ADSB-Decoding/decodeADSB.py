@@ -68,7 +68,7 @@ def process_hex_values(icao_address):
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
-    dump_thread.join()
+    #dump_thread.join()
 
     while True:
         time.sleep(5)

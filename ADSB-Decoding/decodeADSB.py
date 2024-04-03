@@ -53,6 +53,7 @@ def process_hex_values(icao_address):
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
         message_data = {
+            "Type": "FlightData",
             "ICAO": icao_address,
             "Callsign": flight_callsign,
             "NACp": nac_p[0]
@@ -85,6 +86,7 @@ if __name__ == "__main__":
 
                 # Create message data
                 message_data = {
+                    "Type": "FlightPosition",
                     "Icao": icao,
                     "Longitude": longitude,
                     "Latitude": latitude

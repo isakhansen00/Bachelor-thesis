@@ -1,5 +1,11 @@
 import requests
 
+# Fetches airplane data from a specified URL and parses it into a dictionary 
+# where each entry represents an airplane identified by its hex value, 
+# with corresponding latitude and longitude coordinates.
+# Returns:
+#   - If successful, returns a dictionary containing flight positions data.
+#   - If unsuccessful, returns an error message indicating the failure reason.
 def fetch_airplane_data():
     flight_positions = {}
     try:
@@ -7,16 +13,12 @@ def fetch_airplane_data():
         if response.status_code == 200:
             data = response.json()
             for airplane in data:
+
                 hex_value = airplane["hex"]
                 lat = airplane["lat"]
                 lon = airplane["lon"]
 
-                # If ICAO address already exists in dictionary, append new coordinates if they are unique
-                if hex_value in flight_positions:
-                    if (lat, lon) not in flight_positions[hex_value]:
-                        flight_positions[hex_value].append((lat, lon))
-                else:
-                    flight_positions[hex_value] = [(lat, lon)]
+                flight_positions[hex_value] = [(lat, lon)]
                 
             return flight_positions
         else:

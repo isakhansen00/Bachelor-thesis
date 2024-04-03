@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
                 # Create message data
                 message_data = {
-                    "ICAO": icao,
+                    "Icao": icao,
                     "Longitude": longitude,
                     "Latitude": latitude
                 }

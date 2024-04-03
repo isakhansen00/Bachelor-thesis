@@ -68,13 +68,13 @@ def process_and_insert_into_main_table(flight_data):
     print(unique_icao_addresses)
     cursor3 = db.cursor()  # Initialize cursor here
     if flight_data.icao not in unique_icao_addresses:
-        print("TEST1")
+        #print("TEST1")
         cursor3.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (?, ?)", (flight_data.icao, time.time()))
-        print("TEST2")
+        #print("TEST2")
         db.commit()
         cursor3.close()
         unique_icao_addresses.add(flight_data.icao) 
-        print("TEST3")
+        #print("TEST3")
     cursor3 = db.cursor()  # Reinitialize cursor after closing
     cursor3.execute("""
         INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp, TripID)
@@ -83,6 +83,7 @@ def process_and_insert_into_main_table(flight_data):
         WHERE ft.ICAO = ?
         """, (flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao))
     db.commit()
+    print("Kom vi hit?")
     cursor3.close()
 
     print(flight_data.callsign)

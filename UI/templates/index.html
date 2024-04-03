@@ -447,13 +447,14 @@ filterWarnings();
 
         // Handle click event on list items to update modal content and map
         $('tr[data-toggle="modal"]').click(function() {
+            var flightId = $(this).data('flight-id');
             var flightIcao = $(this).data('flight-icao');
 
             // Fetch position data corresponding to the ICAO value
             $.ajax({
                 type: "GET",
                 url: "/get_position_data",
-                data: {icao: flightIcao},
+                data: {id: flightId, icao: flightIcao},
                 success: function(data) {
                     if (data.success) {
                         // Hide the display message for no available position data

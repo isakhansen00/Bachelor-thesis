@@ -117,7 +117,7 @@ def insert_trip_id_to_flight_position(flight_data):
 @app.route("/")
 def index():
     cursor4 = db.cursor()
-    cursor4.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData order by ID DESC")
+    cursor4.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightDataNew order by ID DESC")
 
     rows = cursor4.fetchall()
 
@@ -132,11 +132,34 @@ def index():
 
 @app.route('/get_position_data', methods=['GET'])
 def get_position_data():
-    flight_positions = {'4783cc': ["SAS1754", (66.69692734540519, 14.339779940518465), (66.69855667372882, 14.341902299360795), (66.70279292737023, 14.347645152698863)]}
+    id = request.args.get('id')
+    print(id)
     icao = request.args.get('icao')  # Get ICAO value from request parameters
-    if icao in flight_positions:
-        points = flight_positions[icao][1:]  # Extract position data from dictionary
-        return jsonify({'success': True, 'points': points})
+
+    cursor7 = db.cursor()
+
+    # Retrieve TripID based on the provided ICAO
+    cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (id,))
+    row = cursor7.fetchone()
+    if row:
+        trip_id = row[0]
+        print(trip_id)
+        
+        # Fetch positions based on ICAO and TripID
+        cursor7.execute("SELECT Longitude, Latitude FROM FlightTripPositions WHERE ICAO = ? AND TripID = ?", (icao, trip_id))
+        positions = cursor7.fetchall()
+
+        cursor7.close()
+
+        # Construct dictionary
+        if positions:
+            flight_positions = {icao: [(float(pos[1]), float(pos[0])) for pos in positions]}
+            print(flight_positions)
+            points = flight_positions[icao]  # Extract position data from dictionary
+            print(points)
+            return jsonify({'success': True, 'points': points})
+        else:
+            return jsonify({'success': False, 'message': 'No positions found for the given ICAO and TripID'})
     else:
         return jsonify({'success': False, 'message': 'ICAO value not found'})
 

@@ -4,7 +4,7 @@ import pyModeS as mps
 import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
-from fetch_airplane_position import fetch_airplane_data
+from fetch_airplane_data import fetch_airplane_data
 
 hex_values_dict = {}
 

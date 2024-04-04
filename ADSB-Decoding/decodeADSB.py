@@ -47,34 +47,13 @@ def process_hex_values(icao_address):
             flight_callsign = mps.adsb.callsign(hex_value)
         except RuntimeError:
             pass
-        
-    if flight_callsign and nac_p:
-        print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
-        message_data = {
-            "Type": "FlightData",
-            "ICAO": icao_address,
-            "Callsign": flight_callsign,
-            "NACp": nac_p[0]
-        }
-        message = json.dumps(message_data)
-        print(f"Message: {message}")
-        # Send message to Azure IoT Hub
-        client.send_message(message)
-        if nac_p[0] < 10:
-            print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
-        setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index
 
-if __name__ == "__main__":
-    dump_thread = threading.Thread(target=read_dump1090_raw)
-    dump_thread.start()
-    #dump_thread.join()
 
-    # Continuously fetches airplane data every 5 seconds using the fetch_airplane_data() function.
-    # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 
-    # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
-    # The process repeats every 15 seconds.
-    while True:
-        time.sleep(5)
+        # Continuously fetches airplane data every 5 seconds using the fetch_airplane_data() function.
+        # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 
+        # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
+        # The process repeats every 15 seconds.
+        time.sleep(1)
         flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
         print(flight_positions)
         for icao_address, positions in flight_positions.items():
@@ -100,6 +79,63 @@ if __name__ == "__main__":
                 # Send message to Azure IoT Hub
                 client.send_message(message)
 
-                # Print sent message for debugging (optional)
+                    # Print sent message for debugging (optional)
                 print(f"Message sent: {message}")
-        time.sleep(10)  # Sleep for 10 seconds before fetching again
+                time.sleep(0.5)  # Sleep for 10 seconds before fetching again
+        
+    if flight_callsign and nac_p:
+        print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
+        message_data = {
+            "Type": "FlightData",
+            "ICAO": icao_address,
+            "Callsign": flight_callsign,
+            "NACp": nac_p[0]
+        }
+        message = json.dumps(message_data)
+        print(f"Message: {message}")
+        # Send message to Azure IoT Hub
+        client.send_message(message)
+
+        if nac_p[0] < 10:
+            print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
+        setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index
+
+if __name__ == "__main__":
+    dump_thread = threading.Thread(target=read_dump1090_raw)
+    dump_thread.start()
+    #dump_thread.join()
+
+    # Continuously fetches airplane data every 5 seconds using the fetch_airplane_data() function.
+    # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 
+    # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
+    # The process repeats every 15 seconds.
+    # while True:
+    #     time.sleep(5)
+    #     flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
+    #     print(flight_positions)
+    #     for icao_address, positions in flight_positions.items():
+    #     # Extract ICAO address from the dictionary
+    #         icao = icao_address
+
+    #         # Iterate over positions for each ICAO address
+    #         for position in positions:
+    #             # Extract latitude and longitude
+    #             latitude, longitude = position
+
+    #             # Create message data
+    #             message_data = {
+    #                 "Type": "FlightPosition",
+    #                 "Icao": icao,
+    #                 "Longitude": longitude,
+    #                 "Latitude": latitude
+    #             }
+
+    #             # Convert message data to JSON
+    #             message = json.dumps(message_data)
+
+    #             # Send message to Azure IoT Hub
+    #             client.send_message(message)
+
+    #             # Print sent message for debugging (optional)
+    #             print(f"Message sent: {message}")
+    #     time.sleep(10)  # Sleep for 10 seconds before fetching again

@@ -87,7 +87,7 @@ if __name__ == "__main__":
             for position in positions:
                 # Extract latitude and longitude
                 latitude, longitude = position
-                timestamp = int(time.time())
+                timestamp = time.time()
 
                 # Create message data
                 message_data = {

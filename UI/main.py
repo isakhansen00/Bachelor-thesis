@@ -119,6 +119,26 @@ def insert_trip_id_to_flight_position(flight_data):
     cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, flight_data.icao))
     cursor6.close()
 
+# Function to periodically check and remove stale entries from flight_data
+"""
+def check_stale_entries():
+    time.sleep(5)
+    while True:
+        current_time = time.time()
+        stale_threshold = 300  # 5 minutes (300 seconds)
+        stale_entries = []
+
+        for icao_address, data in icao_addresses_timestamp.items():
+            if current_time - data > stale_threshold:
+                stale_entries.append(icao_address)
+
+        for icao_address in stale_entries:
+            del icao_addresses_timestamp[icao_address]
+            print("DONE")
+
+        time.sleep(60)  # Check every minute
+"""
+
 @app.route("/")
 def index():
     cursor4 = db.cursor()

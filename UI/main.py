@@ -28,7 +28,7 @@ rows = cursor.fetchall()
 cursor.close()
 
 flight_data_list = []
-unique_icao_addresses = set()
+unique_icao_addresses = set()  # Used to keep track of flight trips
 
 # for row in rows:
 #     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
@@ -59,7 +59,7 @@ def check_nacp_threshold():
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
-                 insert_trip_id_to_flight_position(flight_data2)  # Insert trip ID to positions in FlightTripPositions table in the database.
+                 insert_trip_id_to_flight_position(flight_data2)  # Insert trip-ID to positions in FlightTripPositions table in the database.
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
@@ -168,14 +168,21 @@ def index():
 
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
+# Retrieves flight position data based on provided row-ID, ICAO code and TripID,
+# generates a map based on the position data, and returns the HTML representation
+# of the map along with success or failure status in JSON format.
+# Returns:
+#   - JSON object with the HTML representation of the generated map and status message
 @app.route("/get_flight_map")
 def get_flight_map():
+    # Retrieve row-ID and ICAO code from the request query string
     flight_id = request.args.get('id')
     icao = request.args.get('icao')
 
+    # Create a cursor for interacting with the database
     cursor7 = db.cursor()
 
-    # Retrieve TripID from FlightDataNew table in database based on the provided ID
+    # Retrieve TripID from FlightDataNew table in database based on the provided row-ID
     cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (flight_id,))
     row = cursor7.fetchone()
     if row:
@@ -187,9 +194,10 @@ def get_flight_map():
 
         cursor7.close()
 
-        # Construct dictionary
+        # Construct dictionary with flight positions
         if positions:
             flight_positions = {icao: [(float(pos[1]), float(pos[0])) for pos in positions]}
+            # Generate map based on flight positions
             flight_map = generate_map(flight_positions)
             # Get the HTML representation of the map
             flight_map_html = flight_map.get_root()._repr_html_()

@@ -71,10 +71,9 @@ if __name__ == "__main__":
     dump_thread.start()
     #dump_thread.join()
 
-    # Continuously fetches airplane data every 5 seconds using the fetch_airplane_data() function.
+    # Continuously fetches airplane data every 15 seconds using the fetch_airplane_data() function.
     # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 
-    # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
-    # The process repeats every 15 seconds.
+    # longitude and a timestamp, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
     while True:
         time.sleep(5)
         flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
@@ -87,7 +86,7 @@ if __name__ == "__main__":
             for position in positions:
                 # Extract latitude and longitude
                 latitude, longitude = position
-                timestamp = time.time()
+                positiontimestamp = time.time()
 
                 # Create message data
                 message_data = {
@@ -95,7 +94,7 @@ if __name__ == "__main__":
                     "Icao": icao,
                     "Longitude": longitude,
                     "Latitude": latitude,
-                    "TripTimestamp": timestamp
+                    "PositionTimestamp": positiontimestamp
                 }
 
                 # Convert message data to JSON

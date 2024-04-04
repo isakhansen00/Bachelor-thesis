@@ -87,6 +87,7 @@ if __name__ == "__main__":
             for position in positions:
                 # Extract latitude and longitude
                 latitude, longitude = position
+                timestamp = time.time()
 
                 # Create message data
                 message_data = {
@@ -94,7 +95,7 @@ if __name__ == "__main__":
                     "Icao": icao,
                     "Longitude": longitude,
                     "Latitude": latitude,
-                    "TripTimestamp": int(time.time())
+                    "TripTimestamp": timestamp
                 }
 
                 # Convert message data to JSON

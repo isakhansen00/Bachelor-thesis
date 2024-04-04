@@ -47,6 +47,7 @@ def process_hex_values(icao_address):
             flight_callsign = mps.adsb.callsign(hex_value)
         except RuntimeError:
             pass
+
         
     if flight_callsign and nac_p:
         print(f"Flight {flight_callsign} with icao {icao_address} has NACp value: {nac_p}")
@@ -60,6 +61,7 @@ def process_hex_values(icao_address):
         print(f"Message: {message}")
         # Send message to Azure IoT Hub
         client.send_message(message)
+
         if nac_p[0] < 10:
             print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
         setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index

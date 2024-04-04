@@ -94,7 +94,7 @@ if __name__ == "__main__":
                     "Icao": icao,
                     "Longitude": longitude,
                     "Latitude": latitude,
-                    "TripTimestamp": time.time()
+                    "TripTimestamp": int(time.time())
                 }
 
                 # Convert message data to JSON

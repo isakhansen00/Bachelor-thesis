@@ -7,6 +7,7 @@ from flask_socketio import SocketIO, emit
 from threading import Lock
 import sys
 sys.path.insert(0, 'Map')
+from map_ui import generate_map
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -134,20 +135,15 @@ def index():
 
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
-# Retrieves flight positions data based on provided ID and ICAO values.
-# This function gets called from index.html when a modal gets opened 
-# Returns:
-#   - JSON response containing success status and points data if positions are found, 
-#     otherwise returns a failure status with an appropriate message.
-@app.route('/get_position_data', methods=['GET'])
-def get_position_data():
-    id = request.args.get('id')  # Get ID value from request parameters
-    icao = request.args.get('icao')  # Get ICAO value from request parameters
+@app.route("/get_flight_map")
+def get_flight_map():
+    flight_id = request.args.get('id')
+    icao = request.args.get('icao')
 
     cursor7 = db.cursor()
 
     # Retrieve TripID from FlightDataNew table in database based on the provided ID
-    cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (id,))
+    cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (flight_id,))
     row = cursor7.fetchone()
     if row:
         trip_id = row[0]
@@ -161,13 +157,14 @@ def get_position_data():
         # Construct dictionary
         if positions:
             flight_positions = {icao: [(float(pos[1]), float(pos[0])) for pos in positions]}
-            points = flight_positions[icao]  # Extract position data from dictionary
-            return jsonify({'success': True, 'points': points})
+            flight_map = generate_map(flight_positions)
+            # Get the HTML representation of the map
+            flight_map_html = flight_map.get_root()._repr_html_()
+            return jsonify({'success': True, 'html': flight_map_html})
         else:
-            return jsonify({'success': False, 'message': 'No positions found for the given ICAO and TripID'})
+            return jsonify({'success': False, 'message': 'No available position data for this airplane.'})
     else:
         return jsonify({'success': False, 'message': 'ICAO value not found'})
-
 
 """
 Decorator for connect

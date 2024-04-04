@@ -86,10 +86,11 @@
               <p><strong>ID:</strong> <span id="data-flight-id"></span></p>
               <p><strong>ICAO:</strong> <span id="data-flight-icao"></span></p>
               <p><strong>Callsign:</strong> <span id="data-flight-callsign"></span></p>
-              <p><strong>NACp:</strong> <span id="data-flight-nacp"></span></p> 
-              <!-- Map is showing if position data is available, else paragraph is showing -->
-              <div id="map" style="height: 400px;"></div>
-              <p class="no-position-data-message" style="display:none;">No available position data for this airplane.</p>                      
+              <p><strong>NACp:</strong> <span id="data-flight-nacp"></span></p>
+              <button type="button" class="btn btn-primary" id="show-flight-map">Show Flight Map</button> 
+              <div class="modal-body" id="flight-map-modal">
+                <!-- Map will be loaded here -->
+            </div>               
             </div>
         </div>
     </div>
@@ -415,81 +416,40 @@ filterWarnings();
 
 </script>  
 
-<!-- This script handles the initialization and updating of a Leaflet map to display flight positions. 
-     It fetches position data via AJAX requests, updates the map with the retrieved positions, and handles modal interactions. 
-     The map is rendered using the Leaflet library and OpenStreetMap tiles. -->
 <script>
     $(document).ready(function() {
-        var map; // Define a global variable to hold the map instance
 
-        // Function to draw map based on flight coordinates
-        function updateMap(coordinates) {
-
-            // Check if the map instance already exists, if yes, remove it
-            if (map) {
-                map.remove();
-            }
-            
-            var lastCoord = coordinates[coordinates.length - 1]; // Get the last coordinates
-
-            map = L.map('map').setView(lastCoord, 7); // Set map view to the last coordinates
-
-            // Add OpenStreetMap tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            // Add polyline to display flight path
-            L.polyline(coordinates, {color: 'blue'}).addTo(map);
-
-            // Add marker for the last coordinate
-            var lastCoord = coordinates[coordinates.length - 1];
-            L.marker(lastCoord).addTo(map);
-
-            // Adjust map size after a short delay to ensure proper rendering
-            setTimeout(function(){ map.invalidateSize()}, 500);
-        }
-
-        // Retrive available position data from database to draw the flightpath on a map
-        $('tr[data-toggle="modal"]').click(function() {
-            var flightId = $(this).data('flight-id');
-            var flightIcao = $(this).data('flight-icao');
-
-            // Fetch position data corresponding to the ICAO value and ID of row in databasetable
-            $.ajax({
-                type: "GET",
-                url: "/get_position_data",
-                data: {id: flightId, icao: flightIcao},
-                success: function(data) {
-                    if (data.success) {
-                        // Hide the display message for no available position data
-                        $('#myModal .no-position-data-message').hide();
-                        // Display the map
-                        $('#myModal #map').show();
-                        var points = data.points;
-                        updateMap(points); // draw the map with retrieved positions
-                    } else {
-                        // Hide the map
-                        $('#myModal #map').hide();
-                        // Display message for no available position data
-                        $('#myModal .no-position-data-message').show();
-                        console.error("No available position data for this airplane.");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching position data:", error);
-                }
-            });
+        // Function to handle modal close event
+        $('#myModal').on('hidden.bs.modal', function (e) {
+            $('#flight-map-modal').html(''); // Clear the map content
+            $('#show-flight-map').text('Show Flight Map'); // Reset the button text
         });
 
-        // Ensure the map is destroyed when the modal is closed
-        $('#myModal').on('hidden.bs.modal', function () {
-            if ($('#map').length && map) { // Check if the map container exists
-                map.remove();
-                map = null; // Reset the map variable
+        $('#show-flight-map').click(function() {
+            var flightId = $('#data-flight-id').text();
+            var flightIcao = $('#data-flight-icao').text();
+            var $button = $(this);
+            if ($button.text() === 'Show Flight Map') {
+                $.ajax({
+                    type: "GET",
+                    url: "/get_flight_map",
+                    data: { id: flightId, icao: flightIcao },
+                    success: function(data) {
+                        if (data.success) {
+                            $('#flight-map-modal').html(data.html);
+                            $button.text('Close Flight Map');
+                        } else {
+                            $('#flight-map-modal').html('<p>' + data.message + '</p>');
+                        }
+                    }
+                });
+            } else {
+                $('#flight-map-modal').html(''); // Clear the map content
+                $button.text('Show Flight Map');
             }
         });
     });
 </script>
+
 
 {% endblock %}

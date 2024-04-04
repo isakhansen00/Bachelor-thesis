@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # and longitude, converts it to JSON format, and sends it to Azure IoT Hub using an Azure IoT Hub client.
     # The process repeats every 15 seconds.
     while True:
-        time.sleep(0.5)
+        time.sleep(1)
         flight_positions = fetch_airplane_data()  # Call the function to fetch airplane data
         print(flight_positions)
         for icao_address, positions in flight_positions.items():
@@ -104,4 +104,4 @@ if __name__ == "__main__":
 
                 # Print sent message for debugging (optional)
                 print(f"Message sent: {message}")
-        time.sleep(0.1)  # Sleep for 10 seconds before fetching again
+        time.sleep(5)  # Sleep for 10 seconds before fetching again

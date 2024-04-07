@@ -65,6 +65,12 @@ def check_nacp_threshold():
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
                      socketio.sleep(2)
+        # Check if there are any positions with unassigned TripID, and retrieve them and insert trip IDs for each.
+        else:
+            unassigned_icao_addresses = get_icao_positions_with_unassigned_trip_id()
+            if unassigned_icao_addresses:
+                for icao_address in unassigned_icao_addresses:
+                    insert_trip_id_to_flight_position(icao_address[0])
 
 def process_and_insert_into_main_table(flight_data):
     print(unique_icao_addresses)
@@ -152,6 +158,7 @@ def insert_trip_id_to_flight_position(icao_address = None):
     trip_id = get_latest_trip_id(icao_address)
     cursor6 = db.cursor()
     cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, icao_address))
+    db.commit()
     cursor6.close()
 
 # Retrieves the latest position timestamp for a given ICAO address from the FlightTripPositions table.
@@ -229,6 +236,22 @@ def add_icao_for_trips_under_5_minutes_old_to_set():
         
     cursor10.close()
     return True
+
+# This function retrieves the unique ICAO addresses from the FlightTripPositions table
+# where the TripID is not assigned.
+# Returns
+#   - A list of tuples containing the unassigned ICAO addresses.
+def get_icao_positions_with_unassigned_trip_id():
+    cursor11 = db.cursor()
+    cursor11.execute("""
+        SELECT DISTINCT ICAO 
+        FROM FlightTripPositions 
+        WHERE TripID IS NULL
+    """)
+    unassigned_icao_addresses = cursor11.fetchall()
+    cursor11.close()
+
+    return unassigned_icao_addresses
 
 # This function serves as the starter application logic.
 # It initializes the unique_icao_addresses set after a restart of the application, 

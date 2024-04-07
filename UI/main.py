@@ -60,7 +60,7 @@ def check_nacp_threshold():
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
-                 insert_trip_id_to_flight_position(flight_data2)  # Insert trip-ID to positions in FlightTripPositions table in the database.
+                 insert_trip_id_to_flight_position(flight_data2.icao)  # Insert trip-ID to positions in FlightTripPositions table in the database.
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
                      #socketio.emit('nacp_alert', {'callsign'})
@@ -110,7 +110,8 @@ def process_and_insert_into_main_table(flight_data):
     })
 
 # Retrieves the latest trip ID associated with a given ICAO address from the FlightTrips table in the database.
-# Returns: None
+# Returns:
+#   - The latest trip ID associated with the given ICAO address if found, else returns None.
 def get_latest_trip_id(icao_address):
     cursor5 = db.cursor()
     cursor5.execute("""
@@ -146,12 +147,11 @@ def get_latest_trip_timestamp(icao_address):
     return trip_id[0] if trip_id else None
 
 # Inserts the latest trip ID associated with a flight's ICAO code into the FlightTripPositions table in the database.
-# Returns:
-#   - The latest trip ID associated with the given ICAO address if found, else returns None.
-def insert_trip_id_to_flight_position(flight_data):
-    trip_id = get_latest_trip_id(flight_data.icao)
+# Returns: None
+def insert_trip_id_to_flight_position(icao_address = None):
+    trip_id = get_latest_trip_id(icao_address)
     cursor6 = db.cursor()
-    cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, flight_data.icao))
+    cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, icao_address))
     cursor6.close()
 
 # Retrieves the latest position timestamp for a given ICAO address from the FlightTripPositions table.

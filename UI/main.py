@@ -70,12 +70,14 @@ def process_and_insert_into_main_table(flight_data):
     print(unique_icao_addresses)
     cursor3 = db.cursor()  # Initialize cursor here
     if flight_data.icao not in unique_icao_addresses:
+        # Insert a new entry into the 'FlightTrips' table with the ICAO address and current timestamp
         cursor3.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (?, ?)", (flight_data.icao, time.time()))
         db.commit()
         cursor3.close()
-        unique_icao_addresses.add(flight_data.icao) 
+        unique_icao_addresses.add(flight_data.icao)  # Add the ICAO address to the set of unique ICAO addresses
     cursor3 = db.cursor()  # Reinitialize cursor after closing
 
+    # Insert flight data into the 'FlightDataNew' table
     cursor3.execute("""
     INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp, TripID)
     SELECT ?, ?, ?, ft.TripID
@@ -107,7 +109,7 @@ def process_and_insert_into_main_table(flight_data):
         'nacp': flight_data.nacp
     })
 
-# Retrieves the latest trip ID associated with a given ICAO code from the FlightTrips table in the database.
+# Retrieves the latest trip ID associated with a given ICAO address from the FlightTrips table in the database.
 # Returns: None
 def get_latest_trip_id(icao_address):
     cursor5 = db.cursor()
@@ -166,6 +168,10 @@ def get_latest_position_timestamp(icao_address):
     cursor8.close()
     return latest_position_timestamp[0] if latest_position_timestamp else None
 
+# This function adds unique ICAO addresses of flight trip positions that are less than 5 minutes old to a set.
+# It queries the 'FlightTripPositions' table for distinct ICAO addresses with position timestamps within the last 5 minutes.
+# Returns
+#   - If no recent flight position are found, it returns False, otherwise, it returns True.
 def add_icao_for_positions_under_5_minutes_old_to_set():
     # Define the threshold time (5 minutes ago)
     threshold_time = 300
@@ -192,6 +198,11 @@ def add_icao_for_positions_under_5_minutes_old_to_set():
     cursor9.close()
     return True
 
+# This function adds ICAO addresses of flight trips that are less than 5 minutes old to a set.
+# It queries the database for flight trips with timestamps within the last 5 minutes,
+# retrieves the ICAO addresses from the results, and adds them to a set to ensure uniqueness.
+# Returns
+#   - If no recent flight trips are found, it returns False, otherwise, it returns True.
 def add_icao_for_trips_under_5_minutes_old_to_set():
     # Define the threshold time (5 minutes ago)
     threshold_time = 300
@@ -219,11 +230,34 @@ def add_icao_for_trips_under_5_minutes_old_to_set():
     cursor10.close()
     return True
 
+# This function serves as the starter application logic.
+# It initializes the unique_icao_addresses set after a restart of the application, 
+# by adding ICAO addresses for flight trips and positions that are under 5 minutes old,
+# and prints relevant messages based on the outcome.
+def initialize_flight_trips_overview():
+    print("STARTER APP")
+    
+    if add_icao_for_positions_under_5_minutes_old_to_set():
+        if add_icao_for_trips_under_5_minutes_old_to_set():
+            print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION OG TRIP")
+            print(unique_icao_addresses)
+        else:
+            print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION")
+            print(unique_icao_addresses)
+    elif add_icao_for_trips_under_5_minutes_old_to_set():
+        print("LAGT TIL FLIGHTTRIPS VED START VIA TRIP")
+        print(unique_icao_addresses)
+    else:
+        print("INGEN VERDIER Å LEGGE TIL FRA START")
+
 # Function to periodically check and remove stale entries from flight_data
+# This function iterates through the set of unique ICAO addresses, 
+# checks their latest position and trip timestamps, and removes entries 
+# older than 5 minutes. It waits for 1 minute if the set is empty before checking again.
 def check_stale_entries():
     time.sleep(5)
     while True:
-        # Check if the set is empty
+        # Check if the set of unique ICAO addresses is empty
         if not unique_icao_addresses:
             print("VENT")
             # If the set is empty, wait for 1 minute before checking again
@@ -238,9 +272,9 @@ def check_stale_entries():
         icao_addresses_copy = unique_icao_addresses.copy()
 
         for icao_address in icao_addresses_copy:
-            # Get the latest position timestamp for the ICAO code
+            # Get the latest position timestamp for the ICAO address
             latest_position_timestamp = get_latest_position_timestamp(icao_address)
-            # If position older than 5 minutes, remove the ICAO code from the set
+            # If position older than 5 minutes, remove the ICAO address from the set
             if latest_position_timestamp is not None:
                 print(current_time)
                 print(f"latest position timestamp: {latest_position_timestamp} of type {type(latest_position_timestamp)}")
@@ -249,11 +283,12 @@ def check_stale_entries():
                     unique_icao_addresses.remove(icao_address)
                     print("FJERNET VIA POSITION")
                     print(unique_icao_addresses)
-            # If no position and trip is older than 5 minutes, remove the ICAO code from the set
+            # If position data is not available, check for trip timestamp
             else:
                 latest_trip_timestamp = get_latest_trip_timestamp(icao_address)
                 print(f"latest trip timestamp: {latest_trip_timestamp} of type {type(latest_trip_timestamp)}")
                 print(unique_icao_addresses)
+                # If trip data is available and older than 5 minutes, remove the ICAO address from the set
                 if latest_trip_timestamp is not None:
                     print(current_time)
                     if current_time - int(latest_trip_timestamp) > stale_threshold:
@@ -342,20 +377,7 @@ Decorator for disconnect
 
 if __name__=="__main__":
     if first_time_startup:
-        print("STARTER APP")
-        if add_icao_for_positions_under_5_minutes_old_to_set():
-            if add_icao_for_trips_under_5_minutes_old_to_set():
-                print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION OG TRIP")
-                print(unique_icao_addresses)
-            else:
-                print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION")
-                print(unique_icao_addresses)
-        elif add_icao_for_trips_under_5_minutes_old_to_set():
-            print("LAGT TIL FLIGHTTRIPS VED START VIA TRIP")
-            print(unique_icao_addresses)
-        else:
-            print("INGEN VERDIER Å LEGGE TIL FRA START")
-        
-        first_time_startup = False  # Set the flag to False after initialization
+        initialize_flight_trips_overview()
+        first_time_startup = False
     socketio.run(app, debug=True)
     db.close()

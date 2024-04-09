@@ -24,21 +24,21 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
     message_data = {
         "hex_value": hex_value,
         "icao_address": icao_address,
-        "timestamp": timestamp,
+        "hex_timestamp": timestamp,
         "device_id": DEVICE_ID  # Include device identifier in the message
     }
     message = json.dumps(message_data)
-    print(f"Sending message to Azure IoT Hub: {message}")
+    print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
     client.send_message(message)
 
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
-    for line in process.stdout:
+    for line in process.stdout: 
+        timestamp = time.time_ns()
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
-        timestamp = time.time_ns()
         process_signal(hex_value, timestamp)
 
 if __name__ == "__main__":

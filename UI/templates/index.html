@@ -87,7 +87,8 @@
               <p><strong>ICAO:</strong> <span id="data-flight-icao"></span></p>
               <p><strong>Callsign:</strong> <span id="data-flight-callsign"></span></p>
               <p><strong>NACp:</strong> <span id="data-flight-nacp"></span></p>
-              <button type="button" class="btn btn-primary" id="show-flight-map">Show Flight Map</button> 
+              <!-- Button for showing or closing flight map -->
+              <button type="button" class="btn btn-primary" id="show-flight-map">Show Flight Map</button>
               <div class="modal-body" id="flight-map-modal">
                 <!-- Map will be loaded here -->
             </div>               
@@ -416,35 +417,39 @@ filterWarnings();
 
 </script>  
 
+<!-- JavaScript code for handling flight map display in modal -->
 <script>
     $(document).ready(function() {
 
-        // Function to handle modal close event
+        // Clears the map content and resets the button text when the modal is closed
         $('#myModal').on('hidden.bs.modal', function (e) {
-            $('#flight-map-modal').html(''); // Clear the map content
-            $('#show-flight-map').text('Show Flight Map'); // Reset the button text
+            $('#flight-map-modal').html('');
+            $('#show-flight-map').text('Show Flight Map');
         });
 
+        // Click event handler for the 'Show Flight Map' button
         $('#show-flight-map').click(function() {
-            var flightId = $('#data-flight-id').text();
-            var flightIcao = $('#data-flight-icao').text();
-            var $button = $(this);
+            var flightId = $('#data-flight-id').text(); // Retrieves row-ID from a hidden element
+            var flightIcao = $('#data-flight-icao').text(); // Retrieves flight ICAO code from a hidden element
+            var $button = $(this); // Reference to the button element
+            // If the button text is 'Show Flight Map', send an AJAX request to retrieve flight map
             if ($button.text() === 'Show Flight Map') {
                 $.ajax({
                     type: "GET",
                     url: "/get_flight_map",
-                    data: { id: flightId, icao: flightIcao },
+                    data: { id: flightId, icao: flightIcao }, // Passes row-ID and ICAO code as parameters
                     success: function(data) {
                         if (data.success) {
-                            $('#flight-map-modal').html(data.html);
+                            $('#flight-map-modal').html(data.html); // If the request is successful, display the map in the modal and change button text
                             $button.text('Close Flight Map');
                         } else {
-                            $('#flight-map-modal').html('<p>' + data.message + '</p>');
+                            $('#flight-map-modal').html('<p>' + data.message + '</p>'); // If the request fails, display an message in the modal
                         }
                     }
                 });
             } else {
-                $('#flight-map-modal').html(''); // Clear the map content
+                // If the button text is 'Close Flight Map', clear the map content and reset button text
+                $('#flight-map-modal').html('');
                 $button.text('Show Flight Map');
             }
         });

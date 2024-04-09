@@ -10,6 +10,9 @@ IF OBJECT_ID('FlightDataNew', 'U') IS NOT NULL
 IF OBJECT_ID('FlightData', 'U') IS NOT NULL
     DROP TABLE FlightData;
 	
+IF OBJECT_ID('TimestampedHexvalues', 'U') IS NOT NULL
+    DROP TABLE TimestampedHexvalues;
+
 CREATE TABLE FlightTrips (
     TripID INT PRIMARY KEY IDENTITY(1,1),
     ICAO NVARCHAR(255),
@@ -45,4 +48,12 @@ CREATE TABLE FlightData (
  	IoTHub nvarchar(200) NULL,
 	PartitionId nvarchar (3) NULL,
 	isprocessed bit DEFAULT 0,
+);
+	
+CREATE TABLE TimestampedHexvalues (
+    ID INT PRIMARY KEY IDENTITY(1,1),
+	HexValue VARCHAR(255),
+    ICAO NVARCHAR(255),
+    HexTimestamp BIGINT,
+	DeviceID VARCHAR(255),
 );

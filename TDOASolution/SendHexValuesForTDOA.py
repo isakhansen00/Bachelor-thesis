@@ -16,7 +16,7 @@ client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 def process_signal(hex_value, timestamp):
     icao_address = mps.adsb.icao(hex_value)
     if icao_address is not None:
-        print(f"Received ADS-B signal: {hex_value}, ICAO address: {icao_address}")
+        #print(f"Received ADS-B signal: {hex_value}, ICAO address: {icao_address}")
         send_to_iot_hub(hex_value, icao_address, timestamp)
 
 
@@ -28,7 +28,7 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
         "device_id": DEVICE_ID  # Include device identifier in the message
     }
     message = json.dumps(message_data)
-    print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
+    #print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
     client.send_message(message)
 
 def read_dump1090_raw():
@@ -42,6 +42,7 @@ def read_dump1090_raw():
             hex_value = line.strip()
             hex_value = hex_value.replace("*", "")
             hex_value = hex_value.replace(";", "")
+            print(hex_value)
             process_signal(hex_value, timestamp)
 
 if __name__ == "__main__":

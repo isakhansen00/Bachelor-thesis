@@ -1,6 +1,6 @@
 import subprocess
 from azure.iot.device import IoTHubDeviceClient
-import mps.adsb
+import pyModeS as mps
 import time
 import json
 import os

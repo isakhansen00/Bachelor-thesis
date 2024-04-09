@@ -4,6 +4,7 @@ import pyModeS as mps
 import time
 import json
 import os
+import threading
 
 hex_values_dict = {}
 
@@ -57,4 +58,5 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
 
 
 if __name__ == "__main__":
-    read_dump1090_raw()
+    dump_thread = threading.Thread(target=read_dump1090_raw)
+    dump_thread.start()

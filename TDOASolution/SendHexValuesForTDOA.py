@@ -14,10 +14,12 @@ print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
 def process_signal(hex_value, timestamp):
+    last_processed_index = getattr(process_signal, f"last_index_{hex_value}", 0)
     icao_address = mps.adsb.icao(hex_value)
     if icao_address is not None:
         #print(f"Received ADS-B signal: {hex_value}, ICAO address: {icao_address}")
         send_to_iot_hub(hex_value, icao_address, timestamp)
+    setattr(process_signal, f"last_index_{hex_value}", last_processed_index + 1)
 
 
 def send_to_iot_hub(hex_value, icao_address, timestamp):
@@ -34,20 +36,13 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
-    last_line = None  # Variable to store the last line read
-    
-    while True:
-        line = process.stdout.readline().strip()
-        if line:
-            last_line = line
-                
-    
-        # Process the last line
-        if last_line:
-            timestamp = time.time_ns()
-            hex_value = last_line.replace("*", "").replace(";", "")
-            print(hex_value)
-            process_signal(hex_value, timestamp)
+    for line in process.stdout: 
+        timestamp = time.time_ns()
+        hex_value = line.strip()
+        hex_value = hex_value.replace("*", "")
+        hex_value = hex_value.replace(";", "")
+        print(hex_value)
+        process_signal(hex_value, timestamp)
 
 if __name__ == "__main__":
     read_dump1090_raw()

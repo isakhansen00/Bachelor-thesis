@@ -60,3 +60,4 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
+    dump_thread.join()

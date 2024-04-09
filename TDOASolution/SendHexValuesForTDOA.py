@@ -34,16 +34,24 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     
-    while True:
-        line = process.stdout.readline().strip()
-        if line:
+    last_line = None  # Variable to store the last line read
+    
+    try:
+        while True:
+            line = process.stdout.readline().strip()
+            if line:
+                last_line = line
                 
-            timestamp = time.time_ns()
-            hex_value = line.strip()
-            hex_value = hex_value.replace("*", "")
-            hex_value = hex_value.replace(";", "")
-            print(hex_value)
-            process_signal(hex_value, timestamp)
+    except KeyboardInterrupt:
+        # Handle Ctrl+C to exit gracefully
+        pass
+    
+    # Process the last line
+    if last_line:
+        timestamp = time.time_ns()
+        hex_value = last_line.replace("*", "").replace(";", "")
+        print(hex_value)
+        process_signal(hex_value, timestamp)
 
 if __name__ == "__main__":
     read_dump1090_raw()

@@ -15,6 +15,20 @@ CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
+def read_dump1090_raw():
+    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
+    
+    for line in process.stdout: 
+        timestamp = time.time_ns()
+        hex_value = line.strip()
+        hex_value = hex_value.replace("*", "")
+        hex_value = hex_value.replace(";", "")
+        icao_address = mps.adsb.icao(hex_value)
+        if icao_address is not None:
+            hex_values_dict.setdefault(icao_address, []).append(hex_value)   
+            print(hex_value)
+            process_signal(icao_address, timestamp)
+
 def process_signal(icao_address, timestamp):
     hex_values = hex_values_dict.get(icao_address, [])
     last_processed_index = getattr(process_signal, f"last_index_{icao_address}", 0)
@@ -40,19 +54,7 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
     print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
     client.send_message(message)
 
-def read_dump1090_raw():
-    process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
-    for line in process.stdout: 
-        timestamp = time.time_ns()
-        hex_value = line.strip()
-        hex_value = hex_value.replace("*", "")
-        hex_value = hex_value.replace(";", "")
-        icao_address = mps.adsb.icao(hex_value)
-        if icao_address is not None:
-            hex_values_dict.setdefault(icao_address, []).append(hex_value)   
-            print(hex_value)
-            process_signal(icao_address, timestamp)
+
 
 if __name__ == "__main__":
     read_dump1090_raw()

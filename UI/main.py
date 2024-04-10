@@ -322,6 +322,54 @@ def check_stale_entries():
         # Wait for 1 minute before checking again
         time.sleep(60)
 
+
+def check_for_spoofing(hex_value, time_diffs):
+    threshold_time = 5
+    #print(time_diffs)
+    # Calculate the change in TDOA over time
+    delta_tdoa = max(time_diffs.values()) - min(time_diffs.values())
+    print(delta_tdoa)
+    print(hex_value)
+    if delta_tdoa < threshold_time:
+        print(f"Potential ADS-B spoofing detected for hex value {hex_value}. TDOA remains constant.")
+
+def calculate_TDoA(signal_arrival_times):
+    # Calculate time differences between sensors
+    time_diffs = {}
+    for sensor1, time1 in signal_arrival_times.items():
+        for sensor2, time2 in signal_arrival_times.items():
+            if sensor1 != sensor2:
+                # Convert nanoseconds to seconds with decimals
+                time_diff_seconds = (time1 - time2) / 1e9
+                time_diffs[(sensor1, sensor2)] = time_diff_seconds
+    return time_diffs
+
+def perform_tdoa_analysis():
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT HexValue, DeviceID, HexTimestamp
+        FROM TimestampedHexvalues
+        ORDER BY HexValue, DeviceID
+    """)
+
+    hex_value_groups = {}  # Dictionary to store groups of records by hex value
+
+    for row in cursor.fetchall():
+        hex_value, device_id, arrival_time = row
+        if hex_value not in hex_value_groups:
+            hex_value_groups[hex_value] = {'arrival_times': {}}
+        hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
+
+    # Now we have groups of records based on hex value
+    for hex_value, group_data in hex_value_groups.items():
+        if len(group_data['arrival_times']) >= 3:  # Only process groups with at least 3 different device IDs
+            # Perform TDOA analysis on group_data['arrival_times']
+            #print(group_data['arrival_times'])
+            time_diffs = calculate_TDoA(group_data['arrival_times'])
+            #print("Performing TDOA analysis for hex value:", hex_value)
+            #print("Time differences between sensors:", time_diffs)
+            check_for_spoofing(hex_value, time_diffs)
+
 @app.route("/")
 def index():
     cursor4 = db.cursor()
@@ -335,6 +383,7 @@ def index():
         flight_data_list.append(flight_data)
     numberOfItems = len(flight_data_list)
     cursor4.close()
+    perform_tdoa_analysis()
 
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 

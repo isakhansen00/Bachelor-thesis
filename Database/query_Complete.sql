@@ -16,7 +16,7 @@ IF OBJECT_ID('TimestampedHexvalues', 'U') IS NOT NULL
 CREATE TABLE FlightTrips (
     TripID INT PRIMARY KEY IDENTITY(1,1),
     ICAO NVARCHAR(255),
-    TripTimestamp INT,
+	TripTimestamp INT,
 );
 
 CREATE TABLE FlightTripPositions (
@@ -25,6 +25,7 @@ CREATE TABLE FlightTripPositions (
     ICAO NVARCHAR(255),
 	Longitude DECIMAL(15, 12),
     Latitude DECIMAL(15, 12),
+	PositionTimestamp FLOAT,
     CONSTRAINT FK_FlightTripPositions_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
 );
 
@@ -57,3 +58,44 @@ CREATE TABLE TimestampedHexvalues (
     HexTimestamp BIGINT,
 	DeviceID VARCHAR(255),
 );
+
+
+"""
+/*
+Here are links to help you get started with Stream Analytics Query Language:
+Common query patterns - https://go.microsoft.com/fwLink/?LinkID=619153
+Query language - https://docs.microsoft.com/stream-analytics-query/query-language-elements-azure-stream-analytics
+*/
+SELECT
+    ICAO,
+    Callsign,
+    NACp
+INTO
+    [flightDataOutput]
+FROM
+    [RaspberryPiSDRInput]
+WHERE
+    Type = 'FlightData';
+
+SELECT
+    Icao AS ICAO,
+    Longitude,
+    Latitude,
+    PositionTimestamp
+INTO
+    [flightPositionData]
+FROM
+    [RaspberryPiSDRInput]
+WHERE
+    Type = 'FlightPosition';
+
+SELECT
+    hex_value as HexValue,
+    icao_address as ICAO,
+    hex_timestamp as HexTimestamp,
+    device_id as DeviceID
+INTO 
+    [TimestampedHexvaluesDb]
+FROM
+    [RaspberryPiSDRInput]
+"""

@@ -13,7 +13,6 @@ DEVICE_ID = os.getenv("DEVICE_ID")
 
 #CONNECTION_STRING = f"HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId={DEVICE_ID};SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
 CONNECTION_STRING = os.getenv("CONNECTION_STRING")
-CONNECTION_STRING = f'HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiMorkved;SharedAccessKey=xlXcAKxRMl5zAQRp58IQlSwPY9f1qFIovAIoTAT3hP0='
 print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 

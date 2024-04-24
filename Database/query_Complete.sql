@@ -73,7 +73,7 @@ SELECT
 INTO
     [flightDataOutput]
 FROM
-    [RaspberryPiSDRInput]
+    [RaspberryPiHubGruppe24]
 WHERE
     Type = 'FlightData';
 
@@ -85,7 +85,7 @@ SELECT
 INTO
     [flightPositionData]
 FROM
-    [RaspberryPiSDRInput]
+    [RaspberryPiHubGruppe24]
 WHERE
     Type = 'FlightPosition';
 
@@ -97,5 +97,5 @@ SELECT
 INTO 
     [TimestampedHexvaluesDb]
 FROM
-    [RaspberryPiSDRInput]
+    [RaspberryPiHubGruppe24]
 """

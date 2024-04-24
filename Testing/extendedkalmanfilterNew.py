@@ -4,6 +4,10 @@ import numpy as np
 c = 299792458  # Speed of light in m/s
 T = 1  # Time interval between updates (1 second for example)
 
+threshold1 = 100
+threshold2 = 20
+threshold3 = 0.5
+
 # Initial aircraft state vector (position and velocity)
 state_vector_tn = np.array([3828371.0, 323486.0, 5047278.0, 100.0, 200.0, -50.0])
 
@@ -63,65 +67,59 @@ Q_TDOA = np.diag([sigma_tdoa**2] * (len(station_positions) - 1))
 
 # Kalman filter prediction step
 
+# Define synthetic ADS-B measurement vector based on initial state
+# Assuming some measurement error/noise in ADS-B data
+x_adsb_tn = state_vector_tn[:3] + np.random.normal(0, sigma_adsb_position, 3)
+
+# Update the F_TDOA matrix using the function we defined earlier
+F_TDOA = jacobian_f_tdoa(station_positions, state_vector_tn[:3])
+
+# Define synthetic TDOA measurement vector based on the function f
+# This should calculate the TDOA based on the true positions of the aircraft and the stations
+# Here we are adding some synthetic noise to simulate measurement error
+actual_tdoas = f(station_positions, state_vector_tn[:3])
+measurement_noise = np.random.normal(0, sigma_tdoa, len(actual_tdoas))
+z_tdoa_tn = actual_tdoas + measurement_noise
+
 # Kalman filter update with TDOA data (measurement update)
 z_tdoa_tn1 = np.array([1e-6, 1.5e-6])  # Synthetic TDOA measurements
-F_TDOA = jacobian_f_tdoa(station_positions, state_vector_tn1[:3])  # Assuming aircraft_position is in the first
 
 
 # Kalman filter process
 # 1. Prediction
-# Predict the state for the time instant of new measurements
 state_vector_tn1_hat = G @ state_vector_tn  # Predicted state vector
 state_cov_tn1_hat = G @ state_cov_tn @ G.T + W  # Predicted state covariance matrix
 
+#print(state_cov_tn1_hat)
+
 # 2. ADS-B Innovation test
-# Compute the innovation for ADS-B
-y_adsb_tn1 = x_adsb_tn - F_ADSB @ state_vector_tn1_hat
-# Compute the innovation covariance matrix for ADS-B
-R_adsb_tn1 = F_ADSB @ state_cov_tn1_hat @ F_ADSB.T + Q_ADSB
-# Innovation test for ADS-B
-test_adsb = y_adsb_tn1.T @ np.linalg.inv(R_adsb_tn1) @ y_adsb_tn1
-if test_adsb > threshold1:  # Replace with actual threshold
+y_adsb_tn1 = x_adsb_tn - F_ADSB @ state_vector_tn1_hat  # ADS-B innovation
+R_adsb_tn1 = F_ADSB @ state_cov_tn1_hat @ F_ADSB.T + Q_ADSB  # Innovation covariance matrix
+test_adsb = y_adsb_tn1.T @ np.linalg.inv(R_adsb_tn1) @ y_adsb_tn1  # Innovation test statistic
+if test_adsb > threshold1:
     print("Alarm T1: ADS-B data inconsistent")
 
 # 3. Updating with ADS-B data
-# Compute the Kalman gain for ADS-B
-K_adsb_tn1 = state_cov_tn1_hat @ F_ADSB.T @ np.linalg.inv(R_adsb_tn1)
-# Update the aircraft state vector with ADS-B data
-state_vector_tn1 = state_vector_tn1_hat + K_adsb_tn1 @ y_adsb_tn1
-# Update the state covariance matrix with ADS-B data
-state_cov_tn1 = (np.eye(len(state_vector_tn1)) - K_adsb_tn1 @ F_ADSB) @ state_cov_tn1_hat
+K_adsb_tn1 = state_cov_tn1_hat @ F_ADSB.T @ np.linalg.inv(R_adsb_tn1)  # Kalman gain for ADS-B
+state_vector_tn1 = state_vector_tn1_hat + K_adsb_tn1 @ y_adsb_tn1  # Updated state vector
+state_cov_tn1 = (np.eye(6) - K_adsb_tn1 @ F_ADSB) @ state_cov_tn1_hat  # Updated state covariance matrix
+
+
+#print(f"FTDOA: {F_TDOA} \n\n state_cov: {state_cov_tn1}")
 
 # 4. TDOA Innovation test
-# Compute the innovation for TDOA
-y_tdoa_tn1 = z_tdoa_tn - f(...)  # f(...) should calculate expected TDOA given state_vector_tn1
-# Compute the innovation covariance matrix for TDOA
-R_tdoa_tn1 = F_TDOA @ state_cov_tn1 @ F_TDOA.T + Q_TDOA
-# Innovation test for TDOA
-test_tdoa = y_tdoa_tn1.T @ np.linalg.inv(R_tdoa_tn1) @ y_tdoa_tn1
-if test_tdoa > threshold2:  # Replace with actual threshold
+y_tdoa_tn1 = z_tdoa_tn - f(station_positions, state_vector_tn1[:3])  # TDOA innovation (define f() accordingly)
+R_tdoa_tn1 = F_TDOA @ state_cov_tn1 @ F_TDOA.T + Q_TDOA  # Innovation covariance matrix for TDOA
+test_tdoa = y_tdoa_tn1.T @ np.linalg.inv(R_tdoa_tn1) @ y_tdoa_tn1  # Innovation test statistic for TDOA
+if test_tdoa > threshold2:
     print("Alarm T2: TDOA data inconsistent")
 
 # 5. Updating with TDOA measurements
-if test_tdoa < threshold3:  # Replace with actual threshold
-    # Compute the new Kalman gain for TDOA
-    K_tdoa_tn1 = state_cov_tn1 @ F_TDOA.T @ np.linalg.inv(R_tdoa_tn1)
-    # Update the aircraft state vector with TDOA data
-    state_vector_tn1 = state_vector_tn1 + K_tdoa_tn1 @ y_tdoa_tn1
-    # Update the state covariance matrix with TDOA data
-    state_cov_tn1 = (np.eye(len(state_vector_tn1)) - K_tdoa_tn1 @ F_TDOA) @ state_cov_tn1
+if test_tdoa < threshold3:
+    K_tdoa_tn1 = state_cov_tn1 @ F_TDOA.T @ np.linalg.inv(R_tdoa_tn1)  # Kalman gain for TDOA
+    state_vector_tn1 = state_vector_tn1 + K_tdoa_tn1 @ y_tdoa_tn1  # Update state vector with TDOA data
+    state_cov_tn1 = (np.eye(6) - K_tdoa_tn1 @ F_TDOA) @ state_cov_tn1  # Update state covariance matrix with TDOA data
 
-# Print updated state vector and state covariance matrix
+# Print the updated state vector and covariance matrix
 print("Updated state vector:\n", state_vector_tn1)
 print("\nUpdated state covariance matrix:\n", state_cov_tn1)
-
-# state_vector_tn1_hat = G @ state_vector_tn
-# state_cov_tn1_hat = G @ state_cov_tn @ G.T + W
-
-# Kalman filter update with ADS-B data (measurement update)
-# z_adsb_tn1 = np.array([3828371.0 + 50, 323486.0 + 50, 5047278.0 + 50])  # Synthetic ADS-B measurement
-# y_adsb_tn1 = z_adsb_tn1 - F_ADSB @ state_vector_tn1_hat
-# R_adsb_tn1 = F_ADSB @ state_cov_tn1_hat @ F_ADSB.T + Q_ADSB
-# K_adsb_tn1 = state_cov_tn1_hat @ F_ADSB.T @ np.linalg.inv(R_adsb_tn1)
-# state_vector_tn1 = state_vector_tn1_hat + K_adsb_tn1 @ y_adsb_tn1
-# state_cov_tn1 = (np.eye(6) - K_adsb_tn1 @ F_ADSB) @ state_cov_tn1_hat

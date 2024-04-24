@@ -1,6 +1,6 @@
 # signals.py
 import time
-
+import pyModeS as pms
 adsb_signals = [
     "8d4a91fa58132419d7c417dc9736", "8d4a91fa9908968350648fab4342", "8d4a91fa234c14f4c71de0bc9933", "8d47875a584bb09a07d35324abb6",
     "8d4a91faea0dc7dc013c08ca9d1c", "8d4a91fa5813941995c4709b333b", "8d4a91fa9908948790709045f1fd", "8d4a91fa5813a4198dc47786f027",
@@ -29,5 +29,22 @@ adsb_signals = [
 for i, signal in enumerate(adsb_signals):
     print(signal)  # or do whatever you want with the signal
 
+# print(len(set(adsb_signals)))
 
+# signal_counts = {}
 
+# # Iterate over the list of signals
+# for signal in adsb_signals:
+#     # Increment the count for the current signal
+#     signal_counts[signal] = signal_counts.get(signal, 0) + 1
+
+# # Iterate over the dictionary to print signals that appear more than once
+# for signal, count in signal_counts.items():
+#     if count > 1:
+#         print(f"Signal: {signal}, Count: {count}")
+#         try:
+#             print(pms.decoder.adsb.typecode(signal))
+#         except RuntimeError:
+#             print("Not a position message")
+
+# print(pms.decoder.adsb.callsign("8d47808d990c508f40689716c8e6"))

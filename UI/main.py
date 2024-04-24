@@ -359,9 +359,10 @@ def perform_tdoa_analysis():
         if hex_value not in hex_value_groups:
             hex_value_groups[hex_value] = {'arrival_times': {}}
         hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
-
+    
     # Now we have groups of records based on hex value
     for hex_value, group_data in hex_value_groups.items():
+        print(group_data['arrival_times'])
         if len(group_data['arrival_times']) >= 3:  # Only process groups with at least 3 different device IDs
             # Perform TDOA analysis on group_data['arrival_times']
             #print(group_data['arrival_times'])

@@ -1,12 +1,14 @@
 import asyncio
 from azure.iot.device.aio import IoTHubDeviceClient
 import time
+from datetime import datetime
 
-async def update_device_twin(status, device_client):
+async def update_device_twin(device_client):
+    last_reported_time = datetime.utcnow().isoformat() + 'Z'
     twin_patch = {
         "properties": {
             "reported": {
-                "status": status
+                "last_reported_time": last_reported_time
             }
         }
     }
@@ -14,8 +16,7 @@ async def update_device_twin(status, device_client):
 
 async def send_heartbeat(device_client):
     while True:
-        status = "Online"
-        await update_device_twin(status, device_client)
+        await update_device_twin(device_client)
         print("Heartbeat sent")
         await asyncio.sleep(10)  # Send heartbeat every 10 seconds
 

@@ -13,7 +13,7 @@ async def update_device_twin(status, conn_str):
     await device_client.patch_twin_reported_properties(twin_patch)
 
 async def main():
-    conn_str = "Your IoT Hub Device Connection String"
+    conn_str = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiFauskeISE;SharedAccessKey=1q1iFmmcHsWgfhR7WaSKODew3PIHBjI/YAIoTDtYz1s="
     status = "Online"
     await update_device_twin(status, conn_str)
 

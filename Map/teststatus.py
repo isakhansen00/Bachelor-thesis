@@ -3,6 +3,56 @@ from azure.iot.device.aio import IoTHubDeviceClient
 import time
 from datetime import datetime
 
+import asyncio
+from azure.iot.device.aio import IoTHubDeviceClient
+import time
+from datetime import datetime
+
+async def send_timestamp(device_client):
+    while True:
+        try:
+            current_time = datetime.utcnow().isoformat() + 'Z'
+            twin_patch = {
+                "properties": {
+                    "reported": {
+                        "last_reported_time": current_time
+                    }
+                }
+            }
+            await device_client.patch_twin_reported_properties(twin_patch)
+            print("Timestamp sent:", current_time)
+        except Exception as e:
+            print("Error:", e)
+        finally:
+            await asyncio.sleep(10)  # Send timestamp every 10 seconds
+
+async def main():
+    pi_morkved = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiMorkved;SharedAccessKey=xlXcAKxRMl5zAQRp58IQlSwPY9f1qFIovAIoTAT3hP0="
+    pi_fauske = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiFauskeISE;SharedAccessKey=1q1iFmmcHsWgfhR7WaSKODew3PIHBjI/YAIoTDtYz1s="
+    pi_bodo = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiBodo;SharedAccessKey=iZVIbvZjXqyrVhD18veLT363Fgp5luN5OAIoTPV3kls="
+
+    conn_str = pi_fauske
+    
+    device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
+    await device_client.connect()  # Connect to IoT Hub
+    
+    try:
+        # Start sending timestamp
+        await send_timestamp(device_client)
+        
+        while True:
+            await asyncio.sleep(1)
+    
+    except KeyboardInterrupt:
+        pass
+    finally:
+        await device_client.disconnect()  # Disconnect from IoT Hub
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
+
+"""
 async def update_device_twin(device_client):
     last_reported_time = datetime.utcnow().isoformat() + 'Z'
     twin_patch = {
@@ -40,3 +90,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+"""

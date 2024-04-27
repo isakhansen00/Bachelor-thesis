@@ -2,7 +2,7 @@ import asyncio
 from azure.iot.device.aio import IoTHubDeviceClient
 from datetime import datetime
 
-async def send_timestamp(device_client):
+async def send_timestamp(device_client, conn_str):
     while True:
         try:
             current_time = datetime.utcnow().isoformat() + 'Z'
@@ -20,15 +20,13 @@ async def send_timestamp(device_client):
         finally:
             await asyncio.sleep(10)  # Send timestamp every 10 seconds
 
-async def main():
-    conn_str = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiFauskeISE;SharedAccessKey=1q1iFmmcHsWgfhR7WaSKODew3PIHBjI/YAIoTDtYz1s="
-    
+async def main(conn_str):
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
     await device_client.connect()  # Connect to IoT Hub
     
     try:
         # Start sending timestamp
-        await send_timestamp(device_client)
+        await send_timestamp(device_client, conn_str)
         
         while True:
             await asyncio.sleep(1)
@@ -39,4 +37,6 @@ async def main():
         await device_client.disconnect()  # Disconnect from IoT Hub
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # Replace conn_str with the appropriate connection string for each Raspberry Pi
+    conn_str = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiFauskeISE;SharedAccessKey=1q1iFmmcHsWgfhR7WaSKODew3PIHBjI/YAIoTDtYz1s="
+    asyncio.run(main(conn_str))

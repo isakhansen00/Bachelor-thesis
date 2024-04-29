@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Status Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Function to update status
+            function updateStatus() {
+                $.getJSON('/status', function(data) {
+                    // Update status of each device
+                    $.each(data, function(device_id, status) {
+                        $("#" + device_id).text(status);
+                    });
+                });
+            }
+
+            // Update status every 5 seconds
+            setInterval(updateStatus, 5000);
+        });
+    </script>
+</head>
+<body>
+    <h1>Status Page</h1>
+    <div id="RaspberryPiMorkved">Unknown</div>
+    <div id="RaspberryPiFauskeISE">Unknown</div>
+    <div id="RaspberryPiBodo">Unknown</div>
+</body>
+</html>

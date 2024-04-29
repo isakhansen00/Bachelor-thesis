@@ -76,7 +76,7 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     #dump_thread.join()
-    asyncio.run(send_sensor_status(conn_str, device_id))
+    asyncio.run(send_sensor_status(client, device_id))
 
 
 

@@ -5,9 +5,9 @@ from azure.iot.device.aio import IoTHubDeviceClient
 # Args:
 #     conn_str (str): The connection string for the IoT Hub.
 #     device_id (str): The ID of the device.
-async def send_sensor_status(conn_str, device_id):
+async def send_sensor_status(client, device_id):
     # Create an IoT Hub device client from the connection string
-    device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
+    device_client = client
     # Connect to the IoT Hub
     await device_client.connect()
     

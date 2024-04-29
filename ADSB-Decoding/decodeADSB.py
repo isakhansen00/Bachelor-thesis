@@ -5,12 +5,17 @@ import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_data import fetch_airplane_data
+from send_sensor_status import send_sensor_status
+import os
 
 hex_values_dict = {}
 
 CONNECTION_STRING = "HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
 MSG_SND = ''
-client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING) 
+client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
+
+conn_str = str(os.getenv("CONNECTION_STRING"))
+device_id = str(os.getenv("DEVICE_ID"))
  
 def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw', '--net'], stdout=subprocess.PIPE, universal_newlines=True)
@@ -68,7 +73,9 @@ def process_hex_values(icao_address):
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
+    dump_thread2 = threading.Thread(target=send_sensor_status(conn_str, device_id))
     dump_thread.start()
+    dump_thread2.start()
     #dump_thread.join()
 
     # Continuously fetches airplane data every 15 seconds using the fetch_airplane_data() function.

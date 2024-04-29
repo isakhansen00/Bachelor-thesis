@@ -5,14 +5,11 @@ import threading
 import json
 from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_data import fetch_airplane_data
-from send_sensor_status import send_sensor_status
 import os
-import asyncio
 
 hex_values_dict = {}
 
 conn_str = str(os.getenv("CONNECTION_STRING"))
-device_id = str(os.getenv("DEVICE_ID"))
 MSG_SND = ''
 client = IoTHubDeviceClient.create_from_connection_string(conn_str)
  
@@ -74,7 +71,6 @@ if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
     #dump_thread.join()
-    asyncio.run(send_sensor_status(client, device_id))
 
 
 

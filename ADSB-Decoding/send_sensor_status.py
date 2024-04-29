@@ -5,9 +5,11 @@ from azure.iot.device.aio import IoTHubDeviceClient
 # Args:
 #     conn_str (str): The connection string for the IoT Hub.
 #     device_id (str): The ID of the device.
-async def send_sensor_status(client, device_id):
+async def send_sensor_status(conn_str, device_id):
+    # Create an IoT Hub device client from the connection string
+    device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
     # Connect to the IoT Hub
-    await client.connect()
+    await device_client.connect()
     
     try:
         # Main loop to continuously send heartbeat messages
@@ -21,4 +23,4 @@ async def send_sensor_status(client, device_id):
         pass
     finally:
         # Disconnect from the IoT Hub when the program terminates
-        await client.disconnect()
+        await device_client.disconnect()

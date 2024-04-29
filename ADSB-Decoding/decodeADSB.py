@@ -7,6 +7,7 @@ from azure.iot.device import IoTHubDeviceClient, Message
 from fetch_airplane_data import fetch_airplane_data
 from send_sensor_status import send_sensor_status
 import os
+import asyncio
 
 hex_values_dict = {}
 
@@ -73,10 +74,11 @@ def process_hex_values(icao_address):
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
-    dump_thread2 = threading.Thread(target=send_sensor_status(conn_str, device_id))
     dump_thread.start()
-    dump_thread2.start()
     #dump_thread.join()
+    asyncio.run(send_sensor_status(conn_str, device_id))
+
+
 
     # Continuously fetches airplane data every 15 seconds using the fetch_airplane_data() function.
     # For each retrieved aircraft position, it constructs a message containing the ICAO address, latitude, 

@@ -13,6 +13,12 @@ IF OBJECT_ID('FlightData', 'U') IS NOT NULL
 IF OBJECT_ID('TimestampedHexvalues', 'U') IS NOT NULL
     DROP TABLE TimestampedHexvalues;
 
+IF OBJECT_ID('ICAO', 'U') IS NOT NULL
+    DROP TABLE ICAO;
+
+IF OBJECT_ID('Delta_TDOA', 'U') IS NOT NULL
+    DROP TABLE Delta_TDOA;
+
 CREATE TABLE FlightTrips (
     TripID INT PRIMARY KEY IDENTITY(1,1),
     ICAO NVARCHAR(255),
@@ -57,6 +63,21 @@ CREATE TABLE TimestampedHexvalues (
     ICAO NVARCHAR(255),
     HexTimestamp BIGINT,
 	DeviceID VARCHAR(255),
+);
+
+-- Creating the ICAO table
+CREATE TABLE ICAO (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    icao_address NVARCHAR(255) UNIQUE
+);
+
+-- Creating the Delta_TDOA table
+CREATE TABLE Delta_TDOA (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    icao_id INT,
+    delta_tdoa DECIMAL(18,6), -- Adjust precision and scale as needed
+    timestamp DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (icao_id) REFERENCES ICAO(id)
 );
 
 

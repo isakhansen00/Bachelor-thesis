@@ -56,8 +56,8 @@ async def main(conn_str, device_id):
 
 if __name__ == '__main__':
     # Replace the connection string with the respective Pi's connection string
-    conn_str = os.getenv("CONNECTION_STRING")
+    conn_str = str(os.getenv("CONNECTION_STRING"))
     # Insert the device ID (e.g., RaspberryPiMorkved, RaspberryPiFauskeISE, RaspberryPiBodo
-    device_id = os.getenv("DEVICE_ID")
+    device_id = str(os.getenv("DEVICE_ID"))
     
     asyncio.run(main(conn_str, device_id))

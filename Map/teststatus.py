@@ -1,6 +1,7 @@
 import asyncio
 from azure.iot.device.aio import IoTHubDeviceClient
 from datetime import datetime
+import os
 
 """
 Sends a heartbeat to update the device twin.
@@ -55,8 +56,8 @@ async def main(conn_str, device_id):
 
 if __name__ == '__main__':
     # Replace the connection string with the respective Pi's connection string
-    conn_str = "HostName=RaspberryPiHubGruppe24.azure-devices.net;DeviceId=RaspberryPiFauskeISE;SharedAccessKey=1q1iFmmcHsWgfhR7WaSKODew3PIHBjI/YAIoTDtYz1s="
+    conn_str = os.getenv("CONNECTION_STRING")
     # Insert the device ID (e.g., RaspberryPiMorkved, RaspberryPiFauskeISE, RaspberryPiBodo
-    device_id = "RaspberryPiFauskeISE"
+    device_id = os.getenv("DEVICE_ID")
     
     asyncio.run(main(conn_str, device_id))

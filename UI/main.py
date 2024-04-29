@@ -556,7 +556,7 @@ async def get_status_sensors():
 # Route to show the sensor statuses
 @app.route('/status_sensors')
 def status_sensors():
-    return render_template('status.html')
+    return render_template('sensor_status.html')
 
 """
 Decorator for connect

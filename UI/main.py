@@ -6,6 +6,8 @@ from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 from threading import Lock
 import sys
+import pyModeS as mps
+import datetime
 sys.path.insert(0, 'Map')
 from map_ui import generate_map
 
@@ -333,16 +335,34 @@ def check_for_spoofing(hex_value, time_diffs):
     if delta_tdoa < threshold_time:
         print(f"Potential ADS-B spoofing detected for hex value {hex_value}. TDOA remains constant.")
 
+# def calculate_TDoA(signal_arrival_times):
+#     # Calculate time differences between sensors
+#     time_diffs = {}
+#     for sensor1, time1 in signal_arrival_times.items():
+#         for sensor2, time2 in signal_arrival_times.items():
+#             if sensor1 != sensor2:
+#                 # Convert nanoseconds to seconds with decimals
+#                 time_diff_seconds = (time1 - time2) / 1e9
+#                 time_diffs[(sensor1, sensor2)] = time_diff_seconds
+#     return time_diffs
+
 def calculate_TDoA(signal_arrival_times):
     # Calculate time differences between sensors
     time_diffs = {}
+    processed_pairs = set()  # Keep track of processed sensor pairs
+    
     for sensor1, time1 in signal_arrival_times.items():
         for sensor2, time2 in signal_arrival_times.items():
-            if sensor1 != sensor2:
+            if sensor1 != sensor2 and (sensor1, sensor2) not in processed_pairs and (sensor2, sensor1) not in processed_pairs:
                 # Convert nanoseconds to seconds with decimals
-                time_diff_seconds = (time1 - time2) / 1e9
+                time_diff_seconds = abs((time1 - time2) / 1e9)  # Ensure positive time difference
                 time_diffs[(sensor1, sensor2)] = time_diff_seconds
-    return time_diffs
+                processed_pairs.add((sensor1, sensor2))
+    
+    # Sort and select the top three time differences
+    top_three_diffs = dict(sorted(time_diffs.items(), key=lambda item: item[1], reverse=True)[:3])
+    
+    return top_three_diffs
 
 def perform_tdoa_analysis():
     cursor = db.cursor()
@@ -371,6 +391,81 @@ def perform_tdoa_analysis():
             #print("Time differences between sensors:", time_diffs)
             check_for_spoofing(hex_value, time_diffs)
 
+@app.route("/TDOA")
+def tdoa_table():
+    cursor = db.cursor()
+    cursor.execute("""
+    SELECT th.HexValue, th.DeviceID, th.HexTimestamp
+    FROM TimestampedHexvalues th
+    JOIN (
+        SELECT HexValue
+        FROM TimestampedHexvalues
+        GROUP BY HexValue
+        HAVING COUNT(DISTINCT DeviceID) = (SELECT COUNT(DISTINCT DeviceID) FROM TimestampedHexvalues)
+    ) subquery ON th.HexValue = subquery.HexValue;
+    """)
+    icao_delta_tdoa = {}
+    hex_value_groups = {}  # Dictionary to store groups of records by hex value
+
+    for row in cursor.fetchall():
+        hex_value, device_id, arrival_time = row
+        #print(hex_value)
+        if hex_value not in hex_value_groups:
+            hex_value_groups[hex_value] = {'arrival_times': {}}
+        hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
+    #print(hex_value_groups)
+
+    icao_hex_values = {}  # Dictionary to store hex values for each ICAO address
+    for hex_value, group_data in hex_value_groups.items():
+        icao_address = mps.adsb.icao(hex_value)
+        #print(group_data)
+        if icao_address:
+            icao_hex_values.setdefault(icao_address, []).append(group_data)
+
+    hex_values_data = []
+    for icao_address, hex_values in icao_hex_values.items():
+        time_diffs = {}
+        #print(icao_address)
+        for hex_value_data in hex_values:
+            group_data = hex_value_data['arrival_times']
+            print(len(group_data))
+            if len(group_data) >= 3:  # Only process groups with at least 3 different device IDs
+                time_diffs.update(calculate_TDoA(group_data))
+                #print(icao_address)
+        
+        # if time_diffs:  # Only calculate delta_tdoa if there are time differences
+        #     delta_tdoa = max(time_diffs.values()) - min(time_diffs.values())
+        #     hex_values_data.append({'icao_address': icao_address, 'delta_tdoa': delta_tdoa})
+
+        if time_diffs:  # Only calculate delta_tdoa if there are time differences
+            # Sort the time differences in descending order
+            sorted_diffs = sorted(time_diffs.values(), reverse=True)
+            if len(sorted_diffs) >= 2:
+                # Calculate the delta_tdoa as max - second_max
+                delta_tdoa = sorted_diffs[0] - sorted_diffs[1]
+                hex_values_data.append({'icao_address': icao_address, 'delta_tdoa': delta_tdoa})
+
+                if icao_address in icao_delta_tdoa:
+                    icao_delta_tdoa[icao_address].append(delta_tdoa)
+                else:
+                    icao_delta_tdoa[icao_address] = [delta_tdoa]
+
+
+    # Insert data into the ICAO and Delta_TDOA tables
+    for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
+        cursor.execute("IF NOT EXISTS (SELECT 1 FROM ICAO WHERE icao_address = ?) INSERT INTO ICAO (icao_address) VALUES (?)", (icao_address, icao_address))
+        db.commit()
+
+        cursor.execute("SELECT id FROM ICAO WHERE icao_address = ?", (icao_address,))
+        icao_id = cursor.fetchone()[0]
+
+        for delta_tdoa in delta_tdoa_values:
+            cursor.execute("INSERT INTO Delta_TDOA (icao_id, delta_tdoa, timestamp) VALUES (?, ?, ?)", (icao_id, delta_tdoa, datetime.datetime.now()))
+            db.commit()
+
+
+    return render_template('tdoa_table.html', hex_values_data=hex_values_data)
+
 @app.route("/")
 def index():
     cursor4 = db.cursor()
@@ -384,7 +479,6 @@ def index():
         flight_data_list.append(flight_data)
     numberOfItems = len(flight_data_list)
     cursor4.close()
-    perform_tdoa_analysis()
 
     return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 

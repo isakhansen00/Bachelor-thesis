@@ -57,9 +57,9 @@ async def status():
     for device_id, status in zip(devices.keys(), results):
         sensor_status[device_id] = status
     
-    # # Disconnect all device clients
-    # for device_client in device_clients:
-    #     await device_client.disconnect()
+    # Disconnect all device clients
+    for device_client in device_clients:
+         await device_client.disconnect()
     
     # Return device statuses as JSON
     return jsonify(sensor_status)

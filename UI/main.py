@@ -536,7 +536,7 @@ def get_flight_map():
     else:
         return jsonify({'success': False, 'message': 'ICAO value not found'})
 
-# Route to retrieve the status of all devices
+# Route to retrieve the status of all sensors
 @app.route('/get_status_sensors')
 async def get_status_sensors():
     sensor_status = {}  # Dictionary to hold device statuses
@@ -553,6 +553,7 @@ async def get_status_sensors():
     # Return the device statuses as JSON
     return jsonify(sensor_status)
 
+# Route to show the sensor statuses
 @app.route('/status_sensors')
 def status_sensors():
     return render_template('status.html')

@@ -10,6 +10,8 @@ import pyModeS as mps
 import datetime
 sys.path.insert(0, 'Map')
 from map_ui import generate_map
+from get_sensor_status import get_sensor_status
+import asyncio
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -32,6 +34,19 @@ cursor.close()
 flight_data_list = []
 unique_icao_addresses = set()  # Used to keep track of flight trips
 first_time_startup = True
+
+# Dictionary to hold device information
+devices = {
+    "RaspberryPiMorkved": {
+        "device_id": "RaspberryPiMorkved"
+    },
+    "RaspberryPiFauskeISE": {
+        "device_id": "RaspberryPiFauskeISE"
+    },
+    "RaspberryPiBodo": {
+        "device_id": "RaspberryPiBodo"
+    }
+}
 
 # for row in rows:
 #     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
@@ -520,6 +535,27 @@ def get_flight_map():
             return jsonify({'success': False, 'message': 'No available position data for this airplane.'})
     else:
         return jsonify({'success': False, 'message': 'ICAO value not found'})
+
+# Route to retrieve the status of all devices
+@app.route('/get_status_sensors')
+async def get_status_sensors():
+    sensor_status = {}  # Dictionary to hold device statuses
+
+    # Create a list of asynchronous tasks to retrieve the status of each device
+    tasks = [get_sensor_status(device_id) for device_id in devices.keys()]
+    
+    # Gather the results of asynchronous tasks
+    results = await asyncio.gather(*tasks)
+    
+    # Update the sensor_status dictionary with device statuses
+    sensor_status.update(zip(devices.keys(), results))
+    
+    # Return the device statuses as JSON
+    return jsonify(sensor_status)
+
+@app.route('/status_sensors')
+def status_sensors():
+    return render_template('status.html')
 
 """
 Decorator for connect

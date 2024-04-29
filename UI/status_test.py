@@ -38,7 +38,7 @@ async def get_device_status(device_id):
         return "Disconnected"
 
 # Route to retrieve the status of all devices
-@app.route('/status')
+@app.route('/status_values')
 async def status():
     sensor_status = {}  # Dictionary to hold device statuses
 
@@ -54,7 +54,7 @@ async def status():
     # Return the device statuses as JSON
     return jsonify(sensor_status)
 
-@app.route('/')
+@app.route('/status')
 def index():
     return render_template('status.html')
 

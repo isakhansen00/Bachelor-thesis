@@ -5,6 +5,7 @@ import time
 import json
 import os
 import threading
+import asyncio
 
 hex_values_dict = {}
 
@@ -16,10 +17,12 @@ CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
-def read_dump1090_raw():
+async def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    
-    for line in process.stdout: 
+    while True:
+        line = await process.stdout
+        if not line:
+            break
         timestamp = time.time_ns()
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
@@ -44,7 +47,7 @@ def process_signal(icao_address, timestamp):
     setattr(process_signal, f"last_index_{icao_address}", len(hex_values))
 
 
-def send_to_iot_hub(hex_value, icao_address, timestamp):
+async def send_to_iot_hub(hex_value, icao_address, timestamp):
     message_data = {
         "hex_value": hex_value,
         "icao_address": icao_address,
@@ -53,11 +56,12 @@ def send_to_iot_hub(hex_value, icao_address, timestamp):
     }
     message = json.dumps(message_data)
     print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
-    client.send_message(message)
+    await client.send_message(message)
 
 
+
+async def main():
+    await asyncio.gather(read_dump1090_raw())
 
 if __name__ == "__main__":
-    dump_thread = threading.Thread(target=read_dump1090_raw)
-    dump_thread.start()
-    dump_thread.join()
+    asyncio.run(main())

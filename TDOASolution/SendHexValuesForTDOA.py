@@ -23,7 +23,7 @@ async def read_dump1090_raw():
     #     line = await process.stdout
     #     if not line:
     #         break
-    async for line in process.stdout:
+    for line in process.stdout:
         timestamp = time.time_ns()
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")

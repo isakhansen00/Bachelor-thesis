@@ -17,7 +17,7 @@ CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
-async def read_dump1090_raw():
+def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     # while True:
     #     line = await process.stdout
@@ -62,7 +62,8 @@ async def send_to_iot_hub(hex_value, icao_address, timestamp):
 
 
 async def main():
-    await asyncio.gather(read_dump1090_raw())
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, read_dump1090_raw)
 
 if __name__ == "__main__":
     asyncio.run(main())

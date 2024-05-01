@@ -19,10 +19,11 @@ client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
 async def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
-    while True:
-        line = await process.stdout
-        if not line:
-            break
+    # while True:
+    #     line = await process.stdout
+    #     if not line:
+    #         break
+    for line in process.stdout:
         timestamp = time.time_ns()
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")

@@ -57,7 +57,10 @@ async def send_to_iot_hub(hex_value, icao_address, timestamp):
     }
     message = json.dumps(message_data)
     print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
-    await client.send_message(message)
+    try:
+        await client.send_message(message)
+    except TypeError:
+        print("error")
 
 
 

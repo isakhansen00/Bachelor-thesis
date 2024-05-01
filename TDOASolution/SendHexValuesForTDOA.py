@@ -17,13 +17,13 @@ CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
-def read_dump1090_raw():
+async def read_dump1090_raw():
     process = subprocess.Popen(['/home/admin/dump1090/./dump1090', '--raw'], stdout=subprocess.PIPE, universal_newlines=True)
     # while True:
     #     line = await process.stdout
     #     if not line:
     #         break
-    for line in process.stdout:
+    async for line in process.stdout:
         timestamp = time.time_ns()
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
@@ -32,9 +32,9 @@ def read_dump1090_raw():
         if icao_address is not None:
             hex_values_dict.setdefault(icao_address, []).append(hex_value)   
             print(hex_value)
-            process_signal(icao_address, timestamp)
+            await process_signal(icao_address, timestamp)
 
-def process_signal(icao_address, timestamp):
+async def process_signal(icao_address, timestamp):
     hex_values = hex_values_dict.get(icao_address, [])
     last_processed_index = getattr(process_signal, f"last_index_{icao_address}", 0)
     new_hex_values = hex_values[last_processed_index:]
@@ -44,7 +44,7 @@ def process_signal(icao_address, timestamp):
         icao_address = mps.adsb.icao(hex_value)
         if icao_address is not None:
             #print(f"Received ADS-B signal: {hex_value}, ICAO address: {icao_address}")
-            send_to_iot_hub(hex_value, icao_address, timestamp)
+            await send_to_iot_hub(hex_value, icao_address, timestamp)
     setattr(process_signal, f"last_index_{icao_address}", len(hex_values))
 
 
@@ -62,8 +62,7 @@ async def send_to_iot_hub(hex_value, icao_address, timestamp):
 
 
 async def main():
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, read_dump1090_raw)
+    await asyncio.gather(read_dump1090_raw())
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -62,7 +62,8 @@ async def send_to_iot_hub(hex_value, icao_address, timestamp):
 
 
 async def main():
-    await asyncio.gather(read_dump1090_raw())
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, read_dump1090_raw)
 
 if __name__ == "__main__":
     asyncio.run(main())

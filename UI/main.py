@@ -12,6 +12,10 @@ sys.path.insert(0, 'Map')
 from map_ui import generate_map
 from get_sensor_status import get_sensor_status
 import asyncio
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -417,7 +421,7 @@ def tdoa_table():
         FROM TimestampedHexvalues
         GROUP BY HexValue
         HAVING COUNT(DISTINCT DeviceID) = (SELECT COUNT(DISTINCT DeviceID) FROM TimestampedHexvalues)
-    ) subquery ON th.HexValue = subquery.HexValue;
+    ) subquery ON th.HexValue = subquery.HexValue WHERE th.isprocessed = 0;
     """)
     icao_delta_tdoa = {}
     hex_value_groups = {}  # Dictionary to store groups of records by hex value
@@ -425,6 +429,7 @@ def tdoa_table():
     for row in cursor.fetchall():
         hex_value, device_id, arrival_time = row
         #print(hex_value)
+        cursor.execute("UPDATE TimestampedHexvalues SET isprocessed = 1 WHERE HexValue = ? AND DeviceID = ? AND HexTimestamp = ?", (hex_value, device_id, arrival_time))
         if hex_value not in hex_value_groups:
             hex_value_groups[hex_value] = {'arrival_times': {}}
         hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
@@ -439,47 +444,38 @@ def tdoa_table():
 
     hex_values_data = []
     for icao_address, hex_values in icao_hex_values.items():
-        time_diffs = {}
-        #print(icao_address)
+        time_diffs = []
         for hex_value_data in hex_values:
             group_data = hex_value_data['arrival_times']
-            print(len(group_data))
             if len(group_data) >= 3:  # Only process groups with at least 3 different device IDs
-                time_diffs.update(calculate_TDoA(group_data))
-                #print(icao_address)
-        
-        # if time_diffs:  # Only calculate delta_tdoa if there are time differences
-        #     delta_tdoa = max(time_diffs.values()) - min(time_diffs.values())
-        #     hex_values_data.append({'icao_address': icao_address, 'delta_tdoa': delta_tdoa})
+                time_diffs.extend([time_diff for _, time_diff in calculate_TDoA(group_data).items()])
 
-        if time_diffs:  # Only calculate delta_tdoa if there are time differences
-            # Sort the time differences in descending order
-            sorted_diffs = sorted(time_diffs.values(), reverse=True)
-            if len(sorted_diffs) >= 2:
-                # Calculate the delta_tdoa as max - second_max
-                delta_tdoa = sorted_diffs[0] - sorted_diffs[1]
-                hex_values_data.append({'icao_address': icao_address, 'delta_tdoa': delta_tdoa})
+        if time_diffs:  # Only calculate average TDoA if there are time differences
+            average_tdoa = sum(time_diffs) / len(time_diffs)
+            hex_values_data.append({'icao_address': icao_address, 'average_tdoa': average_tdoa})
 
-                if icao_address in icao_delta_tdoa:
-                    icao_delta_tdoa[icao_address].append(delta_tdoa)
-                else:
-                    icao_delta_tdoa[icao_address] = [delta_tdoa]
+            # Store delta_tdoa values for each icao_address
+            if icao_address in icao_delta_tdoa:
+                icao_delta_tdoa[icao_address].append(delta_tdoa)
+            else:
+                icao_delta_tdoa[icao_address] = [delta_tdoa]
 
-
-    # Insert data into the ICAO and Delta_TDOA tables
+    # Insert data into the Delta_TDOA table
     for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
-        cursor.execute("IF NOT EXISTS (SELECT 1 FROM ICAO WHERE icao_address = ?) INSERT INTO ICAO (icao_address) VALUES (?)", (icao_address, icao_address))
-        db.commit()
-
-        cursor.execute("SELECT id FROM ICAO WHERE icao_address = ?", (icao_address,))
-        icao_id = cursor.fetchone()[0]
-
         for delta_tdoa in delta_tdoa_values:
-            cursor.execute("INSERT INTO Delta_TDOA (icao_id, delta_tdoa, timestamp) VALUES (?, ?, ?)", (icao_id, delta_tdoa, datetime.datetime.now()))
+            cursor.execute("INSERT INTO Delta_TDOA (icao_address, delta_tdoa, timestamp) VALUES (?, ?, ?)", 
+                        (icao_address, delta_tdoa, datetime.datetime.now()))
             db.commit()
 
-
     return render_template('tdoa_table.html', hex_values_data=hex_values_data)
+
+# Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table
+def retrieve_delta_tdoa(icao_id):
+    cursor = db.cursor()
+    cursor.execute("SELECT delta_tdoa FROM Delta_TDOA WHERE icao_address = ?", (icao_id,))
+    rows = cursor.fetchall()
+    delta_tdoa_values = [row[0] for row in rows]
+    return delta_tdoa_values
 
 @app.route("/")
 def index():

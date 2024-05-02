@@ -12,10 +12,6 @@ sys.path.insert(0, 'Map')
 from map_ui import generate_map
 from get_sensor_status import get_sensor_status
 import asyncio
-import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')

@@ -7,7 +7,7 @@
     </h1>
     <br>
     <div class="container primary">
-        <input type="radio" name="filter-type" id="filter-by-id" value="0">
+        <input type="radio" name="filter-type" id="filter-by-id" value="0" checked>
         <label for="filter-by-id">ID</label>
         <input type="radio" name="filter-type" id="filter-by-callsign" value="2">
         <label for="filter-by-callsign">Callsign</label>
@@ -25,7 +25,7 @@
     </div> 
     <br>
 
-    <table id="flight-table" class="table table-striped table-hover table-bordered text-center">
+    <table id="flight-table" class="table table-hover table-bordered text-center">
         <thead>
             <tr class="table-primary">
                 <th class="sortable" data-sort="id">ID</th>
@@ -41,7 +41,7 @@
         <tbody>
             {% for flight_data in flight_data_list %}
                 {% if flight_data.nacp <= 9 %}
-                <tr class="table-danger" data-toggle="modal" data-target="#myModal" 
+                <tr class="table-danger" data-toggle="modal" data-target="#myModal" id="warningid" 
                 data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
                 data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
                     <td>{{ flight_data.id }}</td>

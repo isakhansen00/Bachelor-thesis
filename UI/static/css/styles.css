@@ -7,3 +7,7 @@
 .bg-connected {
     background-color: rgb(112, 177, 88);
 }
+
+.nav-link {
+    font-size: 18px;
+}

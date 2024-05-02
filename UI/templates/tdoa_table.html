@@ -22,7 +22,7 @@
                 {% for hex_value_data in hex_values_data %}
                 <tr data-toggle="modal" data-target="#tdoa-modal" data-hex="{{ hex_value_data.hex_value }}">
                     <td>{{ hex_value_data.icao_address }}</td>
-                    <td>{{ hex_value_data.delta_tdoa }}</td>
+                    <td>{{ hex_value_data.average_tdoa }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

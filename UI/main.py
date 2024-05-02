@@ -444,21 +444,23 @@ def tdoa_table():
 
     hex_values_data = []
     for icao_address, hex_values in icao_hex_values.items():
-        time_diffs = []
         for hex_value_data in hex_values:
             group_data = hex_value_data['arrival_times']
+            time_diffs = []
             if len(group_data) >= 3:  # Only process groups with at least 3 different device IDs
-                time_diffs.extend([time_diff for _, time_diff in calculate_TDoA(group_data).items()])
+                #print(hex_value)
+                for _, time_diff in calculate_TDoA(group_data).items():
+                    time_diffs.append(time_diff)
+                if time_diffs:  # Only calculate average TDoA if there are time differences
+                    average_tdoa = round(sum(time_diffs) / len(time_diffs))
+                    hex_values_data.append({'icao_address': icao_address, 'average_tdoa': average_tdoa})
 
-        if time_diffs:  # Only calculate average TDoA if there are time differences
-            average_tdoa = sum(time_diffs) / len(time_diffs)
-            hex_values_data.append({'icao_address': icao_address, 'average_tdoa': average_tdoa})
-
-            # Store delta_tdoa values for each icao_address
+                # Store delta_tdoa values for each icao_address
             if icao_address in icao_delta_tdoa:
                 icao_delta_tdoa[icao_address].append(average_tdoa)
             else:
                 icao_delta_tdoa[icao_address] = [average_tdoa]
+                # Retrieve delta_tdoa values for the current ICAO address from Delta_TDOA table
 
     # Insert data into the Delta_TDOA table
     for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
@@ -466,16 +468,21 @@ def tdoa_table():
             cursor.execute("INSERT INTO Delta_TDOA (icao_address, delta_tdoa, timestamp) VALUES (?, ?, ?)", 
                         (icao_address, delta_tdoa, datetime.datetime.now()))
             db.commit()
+    
+    hex_values_data = retrieve_delta_tdoa()
 
-    return render_template('tdoa_table.html', hex_values_data=hex_values_data)
+    # Modify the structure of hex_values_data
+    formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
+
+    return render_template('tdoa_table.html', hex_values_data=formatted_hex_values_data)
 
 # Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table
-def retrieve_delta_tdoa(icao_id):
+def retrieve_delta_tdoa():
     cursor = db.cursor()
-    cursor.execute("SELECT delta_tdoa FROM Delta_TDOA WHERE icao_address = ?", (icao_id,))
+    cursor.execute("SELECT icao_address, average_tdoa FROM Delta_TDOA")
     rows = cursor.fetchall()
-    delta_tdoa_values = [row[0] for row in rows]
-    return delta_tdoa_values
+    icao_and_delta_tdoa_values = [(row[0], row[1]) for row in rows]
+    return icao_and_delta_tdoa_values
 
 @app.route("/")
 def index():

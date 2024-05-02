@@ -56,8 +56,8 @@ async def status():
 
 @app.route('/status')
 def index():
-    return render_template('status.html')
+    return render_template('sensor_status.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 

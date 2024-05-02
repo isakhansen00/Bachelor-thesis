@@ -1,0 +1,9 @@
+
+
+.bg-disconnected {
+    background-color: rgb(255, 102, 102);
+}
+
+.bg-connected {
+    background-color: rgb(112, 177, 88);
+}

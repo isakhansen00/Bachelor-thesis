@@ -461,7 +461,7 @@ def tdoa_table():
     # Insert data into the Delta_TDOA table
     for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
         for delta_tdoa in delta_tdoa_values:
-            cursor.execute("INSERT INTO Delta_TDOA (icao_address, delta_tdoa, timestamp) VALUES (?, ?, ?)", 
+            cursor.execute("INSERT INTO TDOAValues (icao_address, delta_tdoa, timestamp) VALUES (?, ?, ?)", 
                         (icao_address, delta_tdoa, datetime.datetime.now()))
             db.commit()
     
@@ -469,7 +469,7 @@ def tdoa_table():
 
     # Modify the structure of hex_values_data
     formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
-
+    cursor.close()
     return render_template('tdoa_table.html', hex_values_data=formatted_hex_values_data)
 
 # Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table

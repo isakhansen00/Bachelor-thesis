@@ -456,9 +456,9 @@ def tdoa_table():
 
             # Store delta_tdoa values for each icao_address
             if icao_address in icao_delta_tdoa:
-                icao_delta_tdoa[icao_address].append(delta_tdoa)
+                icao_delta_tdoa[icao_address].append(average_tdoa)
             else:
-                icao_delta_tdoa[icao_address] = [delta_tdoa]
+                icao_delta_tdoa[icao_address] = [average_tdoa]
 
     # Insert data into the Delta_TDOA table
     for icao_address, delta_tdoa_values in icao_delta_tdoa.items():

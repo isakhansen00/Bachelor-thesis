@@ -41,7 +41,11 @@ async def process_signal(icao_address, timestamp):
     for hex_value in new_hex_values:
         icao_address = mps.adsb.icao(hex_value)
         if icao_address is not None:
-            await send_to_iot_hub(hex_value, icao_address, timestamp)
+            try:
+
+                await send_to_iot_hub(hex_value, icao_address, timestamp)
+            except:
+                pass
     setattr(process_signal, f"last_index_{icao_address}", len(hex_values))
 
 async def send_to_iot_hub(hex_value, icao_address, timestamp):

@@ -60,4 +60,70 @@
 </body>
 </html>
 
+<script>
+    $(document).ready(function() {
+        // WebSocket connection for NACp alerts
+        var socket = io.connect("http://" + document.domain + ":" + location.port);
+    
+        // Handle WebSocket events for NACp alerts
+        socket.on('nacp_alert', function(data) {
+            // Display alert for flights with NACp value below threshold
+            alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
+            console.log(`Alert: Flight has a NACp value of`);
+        });
+    });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+    
+            function colorTable() {
+                $('#flight-table tbody tr').each(function() {
+                    var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
+                    if (nacpValue <= 9) {
+                        $(this).addClass('table-danger');
+                    } else {
+                        $(this).removeClass('table-danger');
+                    }
+                 });
+            }
+            // WebSocket connection for new flight data
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+        
+            // Handle WebSocket events for new flight data
+            socket.on('new_tdoa_data', function(data) {
+                var tableRef = document.getElementById('flight-table').getElementsByTagName('tbody')[0];
+    
+                // Insert a new row at the beginning of the tbody
+                var newRow = tableRef.insertRow(0);
+        
+                // Insert cells into the new row
+                var cell1 = newRow.insertCell(0);
+                var cell2 = newRow.insertCell(1);
+        
+                // Add data to the cells
+                cell1.innerHTML = data.id;
+                cell2.innerHTML = data.icao;
+                cell3.innerHTML = data.callsign;
+                cell4.innerHTML = data.nacp;
+    
+                // Rebind click event listener for new rows
+                $(newRow).attr({
+                    'data-toggle': 'modal',
+                    'data-target': '#myModal',
+                    'data-flight-id': data.id,
+                    'data-flight-icao': data.icao,
+                    'data-flight-callsign': data.callsign,
+                    'data-flight-nacp': data.nacp
+                }).click(function() {
+                    $('#myModal #data-flight-id').text(data.id);
+                    $('#myModal #data-flight-icao').text(data.icao);
+                    $('#myModal #data-flight-callsign').text(data.callsign);
+                    $('#myModal #data-flight-nacp').text(data.nacp);
+                });
+                colorTable()
+            });
+        });
+    </script>
+
 {% endblock %}

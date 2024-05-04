@@ -474,6 +474,12 @@ def check_for_spoofing_continously():
             
             hex_values_data = retrieve_delta_tdoa()
             formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
+            
+            for icao_and_tdoa in formatted_hex_values_data:
+                socketio.emit('new_tdoa_data', {
+                    'icao_address': icao_and_tdoa['icao_address'],
+                    'average_tdoa': icao_and_tdoa['average_tdoa']
+                })
 
         else:
             print("No new values to process")
@@ -696,7 +702,7 @@ Decorator for connect
 """
 @socketio.on('connect')
 def connect():
-    global thread
+    global thread_for_nacp_threshold
     global thread_for_nacp_threshold
     global thread_for_stale_entries
     
@@ -705,9 +711,11 @@ def connect():
     global thread
     global thread_for_spoofing_check
     with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(check_nacp_threshold)
+        if thread_for_nacp_threshold is None:
+            thread_for_nacp_threshold = socketio.start_background_task(check_nacp_threshold)
             thread = socketio.start_background_task(check_stale_entries)
+        if thread_for_nacp_threshold is None:
+            thread_for_stale_entries = socketio.start_background_task(check_stale_entries)         
         if thread_for_spoofing_check is None:
             thread_for_spoofing_check = socketio.start_background_task(check_for_spoofing_continously)
 

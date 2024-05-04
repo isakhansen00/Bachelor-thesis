@@ -611,6 +611,10 @@ def retrieve_delta_tdoa():
 
 @app.route("/")
 def index():
+    return render_template('index.html')
+
+@app.route("/ads-b")
+def ads_b():
     cursor4 = db.cursor()
     cursor4.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightDataNew order by ID DESC")
 
@@ -623,7 +627,7 @@ def index():
     numberOfItems = len(flight_data_list)
     cursor4.close()
 
-    return render_template('index.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
+    return render_template('ads-b.html', flight_data_list = flight_data_list, numberOfItems = numberOfItems)
 
 # Retrieves flight position data based on provided row-ID, ICAO code and TripID,
 # generates a map based on the position data, and returns the HTML representation

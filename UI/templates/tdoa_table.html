@@ -4,9 +4,24 @@
 <body>
     <div class="container">
         <h1>TDOA Analysis</h1>
-        <table class="table">
+        <br>
+        <div class="container primary">
+            <input type="radio" name="filter-type" id="filter-by-id" value="0" checked>
+            <label for="filter-by-icao">ICAO</label>
+            
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">Enter ICAO</span>
+            </div>
+            <input class="form-control" type="text" id="filter-input">
+        </div> 
+        <br>
+
+
+        <table class="table table-striped table-hover table-bordered text-center">
             <thead>
-                <tr>
+                <tr class="table-primary">
                     <th>Hex Value</th>
                     <th>Delta TDOA</th>
                 </tr>

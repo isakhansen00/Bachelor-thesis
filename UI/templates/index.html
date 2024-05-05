@@ -2,9 +2,9 @@
 
 {% block content %}
 
-<div class="card bg-dark justify-content-center" style="margin-top: 20px;">
-    <div class="row" style="width: max-width;">
-    <div class="card" style="width: 16rem; margin-top: 20px; margin-left: 5px;">
+<div class="card bg-primary" style="margin-top: 20px;">
+    <div class="row" style="margin-left: auto; margin-right: auto;">
+    <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
         <div class="card-body">
           <h5 class="card-title">ADS-B</h5>
           <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
@@ -12,19 +12,19 @@
         </div>
       </div>
 
-      <div class="card" style="width: 16rem; margin-top: 20px; margin-left: 5px;">
+      <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
         <div class="card-body">
           <h5 class="card-title">TDOA</h5>
           <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="{{ url_for('tdoa_table') }}" class="btn btn-primary">See ADS-B table</a>
+          <a href="{{ url_for('tdoa_table') }}" class="btn btn-primary">See TDOA table</a>
         </div>
       </div>
 
-      <div class="card" style="width: 16rem; margin-top: 20px; margin-left: 5px;">
+      <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
         <div class="card-body">
           <h5 class="card-title">Sensor Status</h5>
           <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="{{ url_for('status_sensors') }}" class="btn btn-primary">See ADS-B table</a>
+          <a href="{{ url_for('status_sensors') }}" class="btn btn-primary">See sensor status</a>
         </div>
       </div>
     </div>

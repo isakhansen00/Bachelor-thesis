@@ -19,7 +19,7 @@
         <br>
 
 
-        <table class="table table-striped table-hover table-bordered text-center">
+        <table id="tdoa-table" class="table table-striped table-hover table-bordered text-center">
             <thead>
                 <tr class="table-primary">
                     <th>Hex Value</th>
@@ -28,7 +28,9 @@
             </thead>
             <tbody>
                 {% for hex_value_data in hex_values_data %}
-                <tr data-toggle="modal" data-target="#tdoa-modal" data-hex="{{ hex_value_data.hex_value }}">
+                <tr data-toggle="modal" data-target="#myModal" 
+                    data-flight-icao="{{ hex_value_data.icao_address }}" 
+                    tdoa_average="{{ hex_value_data.icao_address }}" data-hex="{{ hex_value_data.hex_value }}">>
                     <td>{{ hex_value_data.icao_address }}</td>
                     <td>{{ hex_value_data.average_tdoa }}</td>
                 </tr>
@@ -58,6 +60,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
 
     <!-- Custom JavaScript -->
     <script>
@@ -107,7 +110,7 @@
         
             // Handle WebSocket events for new flight data
             socket.on('new_tdoa_data', function(data) {
-                var tableRef = document.getElementById('flight-table').getElementsByTagName('tbody')[0];
+                var tableRef = document.getElementById('tdoa-table').getElementsByTagName('tbody')[0];
     
                 // Insert a new row at the beginning of the tbody
                 var newRow = tableRef.insertRow(0);
@@ -117,24 +120,20 @@
                 var cell2 = newRow.insertCell(1);
         
                 // Add data to the cells
-                cell1.innerHTML = data.id;
-                cell2.innerHTML = data.icao;
-                cell3.innerHTML = data.callsign;
-                cell4.innerHTML = data.nacp;
+                cell1.innerHTML = data.icao_address;
+                cell2.innerHTML = data.average_tdoa;
+
     
                 // Rebind click event listener for new rows
                 $(newRow).attr({
                     'data-toggle': 'modal',
                     'data-target': '#myModal',
-                    'data-flight-id': data.id,
-                    'data-flight-icao': data.icao,
-                    'data-flight-callsign': data.callsign,
-                    'data-flight-nacp': data.nacp
+                    'data-flight-icao': data.icao_address,  // Update this line
+                    'tdoa_average': data.average_tdoa,      // Update this line
+
                 }).click(function() {
-                    $('#myModal #data-flight-id').text(data.id);
-                    $('#myModal #data-flight-icao').text(data.icao);
-                    $('#myModal #data-flight-callsign').text(data.callsign);
-                    $('#myModal #data-flight-nacp').text(data.nacp);
+                    $('#myModal #data-flight-icao').text(data.icao_address);
+                    $('#myModal #tdoa-average').text(data.average_tdoa);
                 });
                 colorTable()
             });

@@ -101,6 +101,8 @@ def read_dump1090_raw():
             hex_values_dict.setdefault(icao_address, []).append(hex_value)   
             print(hex_value)
             process_signal(icao_address, timestamp)
+            timestamp2 = time.time_ns()
+            print((timestamp2-timestamp)/1e9)
 
 def process_signal(icao_address, timestamp):
     hex_values = hex_values_dict.get(icao_address, [])
@@ -111,8 +113,9 @@ def process_signal(icao_address, timestamp):
 
         icao_address = mps.adsb.icao(hex_value)
         if icao_address is not None:
+            pass
             #print(f"Received ADS-B signal: {hex_value}, ICAO address: {icao_address}")
-            send_to_iot_hub(hex_value, icao_address, timestamp)
+            #send_to_iot_hub(hex_value, icao_address, timestamp)
     setattr(process_signal, f"last_index_{icao_address}", len(hex_values))
 
 

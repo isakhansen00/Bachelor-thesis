@@ -168,17 +168,17 @@ def read_dump1090_raw():
         hex_value = hex_value.replace(";", "")
         icao_address = mps.adsb.icao(hex_value)
         if icao_address is not None:
-            send_to_iot_hub(hex_value, icao_address, timestamp)
+            
             timestamp2 = time.time_ns()
             print((timestamp2-timestamp)/1e9)
+        send_to_iot_hub(hex_value, timestamp)
 
 
-
-def send_to_iot_hub(hex_value, icao_address, timestamp):
+def send_to_iot_hub(hex_value, timestamp):
     print("test")
     message_data = {
         "hex_value": hex_value,
-        "icao_address": icao_address,
+        "icao_address": 123,
         "hex_timestamp": timestamp,
         "device_id": DEVICE_ID  # Include device identifier in the message
     }

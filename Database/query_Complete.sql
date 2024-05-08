@@ -70,7 +70,9 @@ CREATE TABLE TDOAValues (
     id INT PRIMARY KEY IDENTITY(1,1),
     icao_address NVARCHAR(255),
     average_tdoa NVARCHAR(255),
+    TripID INT FOREIGN KEY REFERENCES FlightTrips(TripID),
     timestamp DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_TDOAValues_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
 );
 
 

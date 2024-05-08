@@ -6,7 +6,7 @@ import time
 import json
 import os
 import threading
-import fetch_airplane_data
+from fetch_airplane_data import fetch_airplane_data
 
 hex_values_dict = {}
 

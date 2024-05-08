@@ -65,7 +65,6 @@ def get_new_data_from_staging_table():
     cursor2.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightData WHERE isprocessed = 0")
     rows = cursor2.fetchall()
     new_data = []
-    print(new_data)
     for row in rows:
         flight_data = FlightDataClass(*row)
         cursor2.execute("UPDATE dbo.FlightData SET isprocessed = 1 WHERE ID = ?", (flight_data.id,))
@@ -99,7 +98,7 @@ def check_nacp_threshold():
                     insert_trip_id_to_flight_position(icao_address[0])
 
 def process_and_insert_into_main_table(flight_data):
-    print(unique_icao_addresses)
+    #print(unique_icao_addresses)
     cursor3 = db.cursor()  # Initialize cursor here
     if flight_data.icao not in unique_icao_addresses:
         # Insert a new entry into the 'FlightTrips' table with the ICAO address and current timestamp
@@ -132,7 +131,7 @@ def process_and_insert_into_main_table(flight_data):
     db.commit()
     cursor3.close()
 
-    print(flight_data.callsign)
+    #print(flight_data.callsign)
     
     socketio.emit('new_flight_data', {
         'id': flight_data.id,
@@ -290,13 +289,13 @@ def initialize_flight_trips_overview():
     if add_icao_for_positions_under_5_minutes_old_to_set():
         if add_icao_for_trips_under_5_minutes_old_to_set():
             print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION OG TRIP")
-            print(unique_icao_addresses)
+            #print(unique_icao_addresses)
         else:
             print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION")
-            print(unique_icao_addresses)
+            #print(unique_icao_addresses)
     elif add_icao_for_trips_under_5_minutes_old_to_set():
         print("LAGT TIL FLIGHTTRIPS VED START VIA TRIP")
-        print(unique_icao_addresses)
+        #print(unique_icao_addresses)
     else:
         print("INGEN VERDIER Å LEGGE TIL FRA START")
 
@@ -328,23 +327,23 @@ def check_stale_entries():
             if latest_position_timestamp is not None:
                 print(current_time)
                 print(f"latest position timestamp: {latest_position_timestamp} of type {type(latest_position_timestamp)}")
-                print(unique_icao_addresses)
+                #print(unique_icao_addresses)
                 if current_time - float(latest_position_timestamp) > stale_threshold:
                     unique_icao_addresses.remove(icao_address)
                     print("FJERNET VIA POSITION")
-                    print(unique_icao_addresses)
+                    #print(unique_icao_addresses)
             # If position data is not available, check for trip timestamp
             else:
                 latest_trip_timestamp = get_latest_trip_timestamp(icao_address)
                 print(f"latest trip timestamp: {latest_trip_timestamp} of type {type(latest_trip_timestamp)}")
-                print(unique_icao_addresses)
+                #print(unique_icao_addresses)
                 # If trip data is available and older than 5 minutes, remove the ICAO address from the set
                 if latest_trip_timestamp is not None:
                     print(current_time)
                     if current_time - int(latest_trip_timestamp) > stale_threshold:
                         unique_icao_addresses.remove(icao_address)
                         print("FJERNET VIA TRIP")
-                        print(unique_icao_addresses)
+                        
 
         # Wait for 1 minute before checking again
         time.sleep(60)
@@ -427,8 +426,25 @@ def check_for_spoofing_continously():
             # Insert data into the Delta_TDOA table
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
                 for average_tdoa in average_tdoa_values:
-                    cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
-                                (icao_address, average_tdoa, datetime.datetime.now()))
+                    if icao_address not in unique_icao_addresses:
+                        cursor.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (%s, %s)", (icao_address, time.time()))
+                        unique_icao_addresses.add(icao_address)  # Add the ICAO address to the set of unique ICAO addresses
+
+                    # Insert flight data into the 'FlightDataNew' table
+                    cursor.execute("""
+                    INSERT INTO dbo.TDOAValues (icao_address, average_tdoa, timestamp, TripID)
+                    SELECT %s, %s, %s, ft.TripID
+                    FROM dbo.FlightTrips ft
+                    WHERE ft.ICAO = %s
+                    AND ft.TripTimestamp = (SELECT MAX(TripTimestamp) FROM dbo.FlightTrips WHERE ICAO = %s)
+                    UNION ALL
+                    SELECT %s, %s, %s, NULL
+                    WHERE NOT EXISTS (SELECT 1 FROM dbo.FlightTrips WHERE ICAO = %s)
+                    """, (icao_address, average_tdoa, datetime.datetime.now(), icao_address, icao_address,
+                       icao_address, average_tdoa, datetime.datetime.now(), icao_address))
+
+                   # cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
+                    #            (icao_address, average_tdoa, datetime.datetime.now()))
                     conn.commit()
                     socketio.emit('new_tdoa_data', {
                     'icao_address': icao_address,
@@ -450,6 +466,10 @@ def check_for_spoofing_continously():
             #formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
 
         else:
+            unassigned_icao_addresses = get_icao_positions_with_unassigned_trip_id()
+            if unassigned_icao_addresses:
+                for icao_address in unassigned_icao_addresses:
+                    insert_trip_id_to_flight_position(icao_address[0])
             print("No new values to process")
 
         #cursor.close()
@@ -458,7 +478,6 @@ def check_for_spoofing_continously():
 
 def get_new_timestamped_hex_values():
     cursor = conn.cursor()
-    print(cursor)
     cursor.execute("""
     SELECT th.HexValue, th.DeviceID, th.HexTimestamp
     FROM TimestampedHexvalues th
@@ -493,7 +512,7 @@ def tdoa_table():
         icao_hex_values = {}  # Dictionary to store hex values for each ICAO address
         for hex_value, group_data in hex_value_groups.items():
             icao_address = mps.adsb.icao(hex_value)
-            print(icao_address)
+   
             #print(group_data)
             if icao_address:
                 icao_hex_values.setdefault(icao_address, []).append(group_data)
@@ -518,12 +537,25 @@ def tdoa_table():
                         icao_delta_tdoa[icao_address] = [average_tdoa]
                         # Retrieve delta_tdoa values for the current ICAO address from Delta_TDOA table
 
-    # Insert data into the Delta_TDOA table
-    for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
-        for delta_tdoa in delta_tdoa_values:
-            cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
-                        (icao_address, delta_tdoa, datetime.datetime.now()))
-            db.commit()
+        # Insert data into the Delta_TDOA table
+        for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
+            for average_tdoa in delta_tdoa_values:
+                                        # Insert flight data into the 'FlightDataNew' table
+                cursor.execute("""
+                INSERT INTO dbo.TDOAValues (icao_address, average_tdoa, timestamp, TripID)
+                SELECT %s, %s, %s, ft.TripID
+                FROM dbo.FlightTrips ft
+                WHERE ft.ICAO = %s
+                AND ft.TripTimestamp = (SELECT MAX(TripTimestamp) FROM dbo.FlightTrips WHERE ICAO = %s)
+                UNION ALL
+                SELECT %s, %s, %s, NULL
+                WHERE NOT EXISTS (SELECT 1 FROM dbo.FlightTrips WHERE ICAO = %s)
+                """, (icao_address, average_tdoa, datetime.datetime.now(), icao_address, icao_address,
+                    icao_address, average_tdoa, datetime.datetime.now(), icao_address))
+
+                #cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
+                #            (icao_address, delta_tdoa, datetime.datetime.now()))
+                db.commit()
     
         # Detect spoofing for each ICAO address
     for icao_address, average_tdoa_values in icao_delta_tdoa.items():
@@ -537,7 +569,7 @@ def tdoa_table():
     hex_values_data = retrieve_delta_tdoa()
 
     # Modify the structure of hex_values_data
-    formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
+    formatted_hex_values_data = [{'ID': icao_and_tdoa[0], 'icao_address': icao_and_tdoa[1], 'average_tdoa': icao_and_tdoa[2]} for icao_and_tdoa in hex_values_data]
     cursor.close()
     return render_template('tdoa_table.html', hex_values_data=formatted_hex_values_data)
 
@@ -567,9 +599,9 @@ def detect_spoofing(average_tdoa_values, threshold_percent):
 # Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table
 def retrieve_delta_tdoa():
     cursor = conn.cursor()
-    cursor.execute("SELECT icao_address, average_tdoa FROM TDOAValues order by ID desc")
+    cursor.execute("SELECT ID, icao_address, average_tdoa FROM TDOAValues order by ID desc")
     rows = cursor.fetchall()
-    icao_and_delta_tdoa_values = [(row[0], row[1]) for row in rows]
+    icao_and_delta_tdoa_values = [(row[0], row[1], row[2]) for row in rows]
     return icao_and_delta_tdoa_values
 
 @app.route("/")
@@ -607,7 +639,14 @@ def get_flight_map():
     cursor7 = db.cursor()
 
     # Retrieve TripID from FlightDataNew table in database based on the provided row-ID
-    cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (flight_id,))
+    try:
+        cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (flight_id,))
+    except:
+        pass
+    # try:
+    #     cursor7.execute("SELECT TripID FROM TDOAValues WHERE ID = ?", (flight_id,))
+    # except:
+    #     pass
     row = cursor7.fetchone()
     if row:
         trip_id = row[0]
@@ -664,13 +703,10 @@ Decorator for connect
 @socketio.on('connect')
 def connect():
     global thread_for_nacp_threshold
-    global thread_for_nacp_threshold
     global thread_for_stale_entries
-    
+    global thread_for_spoofing_check
     print('Client connected')
 
-    global thread
-    global thread_for_spoofing_check
     with thread_lock:
         if thread_for_nacp_threshold is None:
             thread_for_nacp_threshold = socketio.start_background_task(check_nacp_threshold)

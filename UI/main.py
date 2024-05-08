@@ -350,16 +350,6 @@ def check_stale_entries():
         time.sleep(60)
 
 
-# def check_for_spoofing(hex_value, time_diffs):
-#     threshold_time = 5
-#     #print(time_diffs)
-#     # Calculate the change in TDOA over time
-#     delta_tdoa = max(time_diffs.values()) - min(time_diffs.values())
-#     print(delta_tdoa)
-#     print(hex_value)
-#     if delta_tdoa < threshold_time:
-#         print(f"Potential ADS-B spoofing detected for hex value {hex_value}. TDOA remains constant.")
-
 
 def calculate_TDoA(signal_arrival_times):
     # Calculate time differences between sensors
@@ -400,22 +390,22 @@ def check_for_spoofing_continously():
                 hex_value, device_id, arrival_time = row
                 #print(hex_value)
                 cursor.execute("UPDATE TimestampedHexvalues SET isprocessed = 1 WHERE HexValue = %s AND DeviceID = %s AND HexTimestamp = %s", (hex_value, device_id, arrival_time))
-                db.commit()
+                conn.commit()
                 if hex_value not in hex_value_groups:
                     hex_value_groups[hex_value] = {'arrival_times': {}}
                 hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
             #print(hex_value_groups)
 
-            icao_hex_values = {}  # Dictionary to store hex values for each ICAO address
+            icao_and_hex_values = {}  # Dictionary to store hex values for each ICAO address
             for hex_value, group_data in hex_value_groups.items():
                 icao_address = mps.adsb.icao(hex_value)
-                print(icao_address)
+                #print(icao_address)
                 #print(group_data)
                 if icao_address:
-                    icao_hex_values.setdefault(icao_address, []).append(group_data)
+                    icao_and_hex_values.setdefault(icao_address, []).append(group_data)
 
             hex_values_data = []
-            for icao_address, hex_values in icao_hex_values.items():
+            for icao_address, hex_values in icao_and_hex_values.items():
                 for hex_value_data in hex_values:
                     group_data = hex_value_data['arrival_times']
                     time_diffs = []
@@ -435,41 +425,40 @@ def check_for_spoofing_continously():
                             # Retrieve delta_tdoa values for the current ICAO address from Delta_TDOA table
 
             # Insert data into the Delta_TDOA table
-            for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
-                for delta_tdoa in delta_tdoa_values:
+            for icao_address, average_tdoa_values in icao_delta_tdoa.items():
+                for average_tdoa in average_tdoa_values:
                     cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
-                                (icao_address, delta_tdoa, datetime.datetime.now()))
-                    db.commit()
+                                (icao_address, average_tdoa, datetime.datetime.now()))
+                    conn.commit()
+                    socketio.emit('new_tdoa_data', {
+                    'icao_address': icao_address,
+                    'average_tdoa': average_tdoa
+                })
+                    
             
                 # Detect spoofing for each ICAO address
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
                 if len(average_tdoa_values) >= 2:
                     if detect_spoofing(average_tdoa_values, threshold_percent=0.01):
                         print(f"Spoofing detected for ICAO address: {icao_address}")
+                        socketio.emit('spoofing_alert', {'Potential spoofing detected for flight with ICAO': icao_address})
                     else:
                         print(f"No spoofing detected")
                         # Perform further actions if spoofing is detected
             
-            hex_values_data = retrieve_delta_tdoa()
-            formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
-
-            for icao_and_tdoa in formatted_hex_values_data:
-                socketio.emit('new_tdoa_data', {
-                    'icao_address': icao_and_tdoa['icao_address'],
-                    'average_tdoa': icao_and_tdoa['average_tdoa']
-                })
+            #hex_values_data = retrieve_delta_tdoa()
+            #formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
 
         else:
             print("No new values to process")
+
         #cursor.close()
-            # Modify the structure of hex_values_data
-        
-            
-        socketio.sleep(10)
+        socketio.sleep(15)
 
 
 def get_new_timestamped_hex_values():
     cursor = conn.cursor()
+    print(cursor)
     cursor.execute("""
     SELECT th.HexValue, th.DeviceID, th.HexTimestamp
     FROM TimestampedHexvalues th
@@ -477,7 +466,7 @@ def get_new_timestamped_hex_values():
         SELECT HexValue
         FROM TimestampedHexvalues
         GROUP BY HexValue
-        HAVING COUNT(DISTINCT DeviceID) = 3
+        HAVING COUNT(DISTINCT DeviceID) = 2
     ) subquery ON th.HexValue = subquery.HexValue WHERE th.isprocessed = 0;
     """)
     rows = cursor.fetchall()

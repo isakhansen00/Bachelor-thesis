@@ -30,7 +30,7 @@
                 {% for hex_value_data in hex_values_data %}
                 <tr data-toggle="modal" data-target="#myModal" 
                     data-flight-icao="{{ hex_value_data.icao_address }}" 
-                    tdoa_average="{{ hex_value_data.icao_address }}" data-hex="{{ hex_value_data.hex_value }}">>
+                    tdoa_average="{{ hex_value_data.icao_address }}" data-hex="{{ hex_value_data.hex_value }}">
                     <td>{{ hex_value_data.icao_address }}</td>
                     <td>{{ hex_value_data.average_tdoa }}</td>
                 </tr>
@@ -84,10 +84,10 @@
         var socket = io.connect("http://" + document.domain + ":" + location.port);
     
         // Handle WebSocket events for NACp alerts
-        socket.on('nacp_alert', function(data) {
-            // Display alert for flights with NACp value below threshold
-            alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
-            console.log(`Alert: Flight has a NACp value of`);
+        socket.on('spoofing_alert', function(data) {
+            // Display alert for potential spoofing of flight
+            alert(`Alert: Potential spoofing of flight with ICAO: ${data.icao_address} `);
+
         });
     });
     </script>
@@ -95,16 +95,7 @@
     <script>
         $(document).ready(function() {
     
-            function colorTable() {
-                $('#flight-table tbody tr').each(function() {
-                    var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
-                    if (nacpValue <= 9) {
-                        $(this).addClass('table-danger');
-                    } else {
-                        $(this).removeClass('table-danger');
-                    }
-                 });
-            }
+
             // WebSocket connection for new flight data
             var socket = io.connect("http://" + document.domain + ":" + location.port);
         
@@ -135,7 +126,7 @@
                     $('#myModal #data-flight-icao').text(data.icao_address);
                     $('#myModal #tdoa-average').text(data.average_tdoa);
                 });
-                colorTable()
+
             });
         });
     </script>

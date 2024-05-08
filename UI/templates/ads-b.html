@@ -40,7 +40,7 @@
         </thead>
         <tbody>
             {% for flight_data in flight_data_list %}
-                {% if flight_data.nacp <= 9 %}
+                {% if flight_data.nacp < 9 %}
                 <tr class="table-danger" data-toggle="modal" data-target="#myModal" id="warningid" 
                 data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
                 data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
@@ -108,7 +108,7 @@
         function colorTable() {
             $('#flight-table tbody tr').each(function() {
                 var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
-                if (nacpValue <= 9) {
+                if (nacpValue < 9) {
                     $(this).addClass('table-danger');
                 } else {
                     $(this).removeClass('table-danger');

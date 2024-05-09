@@ -30,4 +30,11 @@
     </div>
 </div>
 
+<script>
+  $(document).ready(function() {
+      // WebSocket connection for NACp alerts
+      var socket = io.connect("http://" + document.domain + ":" + location.port);
+  });
+  </script>
+
 {% endblock %}

@@ -372,7 +372,7 @@ This function will be used for continously checking for spoofing and updating ta
 """
 def check_for_spoofing_continously():
     icao_delta_tdoa = {}
-    #cursor = conn.cursor()
+    cursor = conn.cursor()
     print("heisann")
     hex_value_groups = {}  # Dictionary to store groups of records by hex value
     update_statement = """

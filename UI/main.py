@@ -685,7 +685,7 @@ def get_flight_map():
         else:
             return jsonify({'success': False, 'message': 'No available position data for this airplane.'})
     else:
-        return jsonify({'success': False, 'message': 'ICAO value not found'})
+        return jsonify({'success': False, 'message': 'No available flight trip for this airplane'})
 
 # Route to retrieve the status of all sensors
 @app.route('/get_status_sensors')

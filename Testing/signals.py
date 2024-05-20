@@ -1,6 +1,6 @@
 # signals.py
 import time
-import pyModeS as pms
+#import pyModeS as pms
 adsb_signals = [
     "8d4a91fa58132419d7c417dc9736", "8d4a91fa9908968350648fab4342", "8d4a91fa234c14f4c71de0bc9933", "8d47875a584bb09a07d35324abb6",
     "8d4a91faea0dc7dc013c08ca9d1c", "8d4a91fa5813941995c4709b333b", "8d4a91fa9908948790709045f1fd", "8d4a91fa5813a4198dc47786f027",

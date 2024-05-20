@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+    <div class="container">
+        <h1>TDOA Alerts</h1>
+        <br>
+        <div class="container primary">
+            <input type="radio" name="filter-type" id="filter-by-id" value="0" checked>
+            <label for="filter-by-icao">ICAO</label>
+            
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">Enter ICAO</span>
+            </div>
+            <input class="form-control" type="text" id="filter-input">
+        </div> 
+        <br>
+
+
+        <table id="tdoa-table" class="table table-striped table-hover table-bordered text-center">
+            <thead>
+                <tr class="table-primary">
+                    <th>ICAO</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alerts in tdoa_alerts %}
+                <tr 
+                    data-flight-id="{{ tdoa_alerts.ID }}"
+                    data-flight-icao="{{ tdoa_alerts.icao_address }}" 
+                    data-timestamp="{{ tdoa_alerts.timestamp }}">
+                    <td>{{ alerts.icao_address }}</td>
+                    <td>{{ alerts.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
+
+
+</body>
+</html>
+
+<script>
+    $(document).ready(function() {
+        // WebSocket connection for NACp alerts
+        var socket = io.connect("http://" + document.domain + ":" + location.port);
+    
+        // Handle WebSocket events for NACp alerts
+        socket.on('spoofing_alert', function(data) {
+            // Display alert for potential spoofing of flight
+            alert(`Alert: Potential spoofing of flight with ICAO: ${data.icao_address} `);
+
+        });
+    });
+    </script>
+
+
+
+    <script>
+        $(document).ready(function() {
+    
+
+            // WebSocket connection for new flight data
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+        
+            // Handle WebSocket events for new flight data
+            socket.on('new_tdoa_alarm', function(data) {
+                var tableRef = document.getElementById('tdoa-table').getElementsByTagName('tbody')[0];
+    
+                // Insert a new row at the beginning of the tbody
+                var newRow = tableRef.insertRow(0);
+        
+                // Insert cells into the new row
+                var cell2 = newRow.insertCell(0);
+                var cell3 = newRow.insertCell(1);
+        
+                // Add data to the cells
+                cell2.innerHTML = data.icao_address;
+                cell3.innerHTML = data.timestamp;
+
+    
+                // Rebind click event listener for new rows
+                $(newRow).attr({
+
+                    'data-flight-icao': data.icao_address,
+                    'data-timestamp': data.timestamp,     
+                });
+
+            });
+        });
+    </script>
+
+
+
+{% endblock %}

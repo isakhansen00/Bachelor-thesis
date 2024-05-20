@@ -22,9 +22,8 @@
         <table id="tdoa-table" class="table table-striped table-hover table-bordered text-center">
             <thead>
                 <tr class="table-primary">
-                    <th>ID</th>
-                    <th>Hex Value</th>
-                    <th>Delta TDOA</th>
+                    <th>ICAO</th>
+                    <th>Average TDOA</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,7 +32,6 @@
                     data-flight-id="{{ hex_value_data.ID }}"
                     data-flight-icao="{{ hex_value_data.icao_address }}" 
                     tdoa_average="{{ hex_value_data.average_tdoa }}" data-hex="{{ hex_value_data.hex_value }}">
-                    <td>{{ hex_value_data.ID }}</td>
                     <td>{{ hex_value_data.icao_address }}</td>
                     <td>{{ hex_value_data.average_tdoa }}</td>
                 </tr>

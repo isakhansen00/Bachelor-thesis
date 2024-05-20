@@ -1,0 +1,68 @@
+DROP TABLE IF EXISTS FlightTrips;
+DROP TABLE IF EXISTS FlightTripPositions;
+DROP TABLE IF EXISTS FlightDataNew;
+DROP TABLE IF EXISTS FlightData;
+DROP TABLE IF EXISTS TimestampedHexvalues;
+DROP TABLE IF EXISTS TDOAValues;
+
+CREATE TABLE FlightTrips (
+    TripID INT AUTO_INCREMENT PRIMARY KEY,
+    ICAO NVARCHAR(255),
+    TripTimestamp INT
+);
+
+CREATE TABLE FlightTripPositions (
+    PositionID INT AUTO_INCREMENT PRIMARY KEY,
+    TripID INT,
+    ICAO NVARCHAR(255),
+    Longitude DECIMAL(15, 12),
+    Latitude DECIMAL(15, 12),
+    PositionTimestamp FLOAT,
+    CONSTRAINT FK_FlightTripPositions_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
+);
+
+CREATE TABLE FlightDataNew (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ICAO NVARCHAR(255),
+    Callsign NVARCHAR(255),
+    NACp NVARCHAR(255),
+    TripID INT,
+    isprocessed BIT DEFAULT 0,
+    CONSTRAINT FK_FlightData_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
+);
+
+CREATE TABLE FlightData (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ICAO NVARCHAR(255),
+    Callsign NVARCHAR(255),
+    NACp NVARCHAR(255),
+    EventProcessedUtcTime DATETIME NULL,
+    EventEnqueuedUtcTime DATETIME NULL,
+    IoTHub NVARCHAR(200) NULL,
+    PartitionId NVARCHAR(3) NULL,
+    isprocessed BIT DEFAULT 0
+);
+
+CREATE TABLE TimestampedHexvalues (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    HexValue VARCHAR(255),
+    ICAO NVARCHAR(255),
+    HexTimestamp BIGINT,
+    DeviceID VARCHAR(255),
+    isprocessed BIT DEFAULT 0
+);
+
+CREATE TABLE TDOAValues (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    icao_address NVARCHAR(255),
+    average_tdoa NVARCHAR(255),
+    TripID INT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_TDOAValues_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
+);
+
+CREATE TABLE TDOAAlerts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    icao_address NVARCHAR(255),
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);

@@ -70,20 +70,15 @@ def get_new_data_from_staging_table():
     return new_data
 
 def check_nacp_threshold():
-    nac_p_threshold_value = 9
+    nac_p_threshold_value = 8
     while True:
         new_data = get_new_data_from_staging_table()
-        #socketio.emit('nacp_alert', {})
-        #print("hei")
-        #socketio.sleep(1)
         if new_data:
              for flight_data2 in new_data:
                  process_and_insert_into_main_table(flight_data2)
                  insert_trip_id_to_flight_position(flight_data2.icao)  # Insert trip-ID to positions in FlightTripPositions table in the database.
                  if int(flight_data2.nacp) < nac_p_threshold_value:
                      socketio.emit('nacp_alert', {'callsign': flight_data2.callsign, 'nacp': flight_data2.nacp})
-                     #socketio.emit('nacp_alert', {'callsign'})
-                     print("Hwi")
                      socketio.sleep(2)
         # Check if there are any positions with unassigned TripID, and retrieve them and insert trip IDs for each.
         else:
@@ -176,6 +171,7 @@ def get_latest_trip_timestamp(icao_address):
 # Returns: None
 def insert_trip_id_to_flight_position(icao_address = None):
     trip_id = get_latest_trip_id(icao_address)
+    #print(trip_id)
     cursor6 = db.cursor()
     cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, icao_address))
     db.commit()
@@ -269,6 +265,7 @@ def get_icao_positions_with_unassigned_trip_id():
         WHERE TripID IS NULL
     """)
     unassigned_icao_addresses = cursor11.fetchall()
+    #print(unassigned_icao_addresses)
     cursor11.close()
 
     return unassigned_icao_addresses
@@ -383,7 +380,7 @@ def check_for_spoofing_continously():
 
     while True:
         new_timestamped_hex_values = get_new_timestamped_hex_values()
-
+        cursor = conn.cursor()
         if new_timestamped_hex_values:
             # Batch updates
             batch_updates = []
@@ -430,17 +427,21 @@ def check_for_spoofing_continously():
                             icao_delta_tdoa[icao_address].append(average_tdoa)
                         else:
                             icao_delta_tdoa[icao_address] = [average_tdoa]
-                            # Retrieve delta_tdoa values for the current ICAO address from Delta_TDOA table
 
             # Insert data into the Delta_TDOA table
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
+                if icao_address not in unique_icao_addresses:
+                    cursor = conn.cursor()
+                    cursor.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (%s, %s)", (icao_address, time.time()))
+                    unique_icao_addresses.add(icao_address) 
+                    conn.commit()
                 
                 for average_tdoa in average_tdoa_values:
 
-                    if icao_address not in unique_icao_addresses:
-                        cursor = conn.cursor()
-                        cursor.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (%s, %s)", (icao_address, time.time()))
-                        unique_icao_addresses.add(icao_address)  # Add the ICAO address to the set of unique ICAO addresses
+                    # if icao_address not in unique_icao_addresses:
+                    #     cursor = conn.cursor()
+                    #     cursor.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (%s, %s)", (icao_address, time.time()))
+                    #     unique_icao_addresses.add(icao_address)  # Add the ICAO address to the set of unique ICAO addresses
                     print(len(average_tdoa_values))
                     if len(average_tdoa_values) >= 2:
                         # Insert flight data into the 'FlightDataNew' table
@@ -468,12 +469,18 @@ def check_for_spoofing_continously():
                 # Detect spoofing for each ICAO address
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
                 if len(average_tdoa_values) >= 2:
-                    if detect_spoofing(average_tdoa_values, threshold_percent=0.01):
+                    if check_for_spoofing(tdoa_values=average_tdoa_values):
+                        timestamp = datetime.datetime.now()
                         print(f"Spoofing detected for ICAO address: {icao_address}")
-                        socketio.emit('spoofing_alert', {'Potential spoofing detected for flight with ICAO': icao_address})
+                        cursor.execute("INSERT INTO dbo.TDOAAlerts (icao_address, timestamp) VALUES (%s, %s)", (icao_address, timestamp))
+                        socketio.emit('spoofing_alert', {'icao_address': icao_address})
+                        
+                        socketio.emit('new_tdoa_alarm', {
+                        'icao_address': icao_address,
+                        'timstamp': timestamp
+                    })
                     else:
                         print(f"No spoofing detected")
-                        # Perform further actions if spoofing is detected
             
             #hex_values_data = retrieve_delta_tdoa()
             #formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
@@ -481,8 +488,11 @@ def check_for_spoofing_continously():
         else:
             try:
                 unassigned_icao_addresses = get_icao_positions_with_unassigned_trip_id()
+                #print(unassigned_icao_addresses)
                 if unassigned_icao_addresses:
+                    #print(unassigned_icao_addresses)
                     for icao_address in unassigned_icao_addresses:
+                        print(icao_address[0])
                         insert_trip_id_to_flight_position(icao_address[0])
             except:
                 continue
@@ -501,7 +511,7 @@ def get_new_timestamped_hex_values():
         SELECT HexValue
         FROM TimestampedHexvalues
         GROUP BY HexValue
-        HAVING COUNT(DISTINCT DeviceID) = 3
+        HAVING COUNT(DISTINCT DeviceID) = 2
     ) subquery ON th.HexValue = subquery.HexValue WHERE th.isprocessed = 0;
     """)
     rows = cursor.fetchall()
@@ -510,107 +520,24 @@ def get_new_timestamped_hex_values():
 
 @app.route("/TDOA")
 def tdoa_table():
-    cursor = conn.cursor()
-
-    # new_data = get_new_timestamped_hex_values()
-    # #print(new_data)
-    # icao_delta_tdoa = {}
-    # hex_value_groups = {}  # Dictionary to store groups of records by hex value
-    # if new_data:
-    #     for row in new_data:
-    #         hex_value, device_id, arrival_time = row
-    #         #print(hex_value)
-    #         cursor.execute("UPDATE TimestampedHexvalues SET isprocessed = 1 WHERE HexValue = %s AND DeviceID = %s AND HexTimestamp = %s", (hex_value, device_id, arrival_time))
-    #         if hex_value not in hex_value_groups:
-    #             hex_value_groups[hex_value] = {'arrival_times': {}}
-    #         hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
-    #     #print(hex_value_groups)
-
-    #     icao_hex_values = {}  # Dictionary to store hex values for each ICAO address
-    #     for hex_value, group_data in hex_value_groups.items():
-    #         icao_address = mps.adsb.icao(hex_value)
-   
-    #         #print(group_data)
-    #         if icao_address:
-    #             icao_hex_values.setdefault(icao_address, []).append(group_data)
-
-    #     hex_values_data = []
-    #     for icao_address, hex_values in icao_hex_values.items():
-    #         for hex_value_data in hex_values:
-    #             group_data = hex_value_data['arrival_times']
-    #             time_diffs = []
-    #             if len(group_data) >= 2:  # Only process groups with at least 3 different device IDs
-    #                 #print(hex_value)
-    #                 for _, time_diff in calculate_TDoA(group_data).items():
-    #                     time_diffs.append(time_diff)
-    #                 if time_diffs:  # Only calculate average TDoA if there are time differences
-    #                     average_tdoa = round(sum(time_diffs) / len(time_diffs))
-    #                     hex_values_data.append({'icao_address': icao_address, 'average_tdoa': average_tdoa})
-
-    #                     # Store delta_tdoa values for each icao_address
-    #                 if icao_address in icao_delta_tdoa:
-    #                     icao_delta_tdoa[icao_address].append(average_tdoa)
-    #                 else:
-    #                     icao_delta_tdoa[icao_address] = [average_tdoa]
-    #                     # Retrieve delta_tdoa values for the current ICAO address from Delta_TDOA table
-
-    #     # Insert data into the Delta_TDOA table
-    #     for icao_address, delta_tdoa_values in icao_delta_tdoa.items():
-    #         for average_tdoa in delta_tdoa_values:
-    #                                     # Insert flight data into the 'FlightDataNew' table
-    #             cursor.execute("""
-    #             INSERT INTO dbo.TDOAValues (icao_address, average_tdoa, timestamp, TripID)
-    #             SELECT %s, %s, %s, ft.TripID
-    #             FROM dbo.FlightTrips ft
-    #             WHERE ft.ICAO = %s
-    #             AND ft.TripTimestamp = (SELECT MAX(TripTimestamp) FROM dbo.FlightTrips WHERE ICAO = %s)
-    #             UNION ALL
-    #             SELECT %s, %s, %s, NULL
-    #             WHERE NOT EXISTS (SELECT 1 FROM dbo.FlightTrips WHERE ICAO = %s)
-    #             """, (icao_address, average_tdoa, datetime.datetime.now(), icao_address, icao_address,
-    #                 icao_address, average_tdoa, datetime.datetime.now(), icao_address))
-
-    #             #cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
-    #             #            (icao_address, delta_tdoa, datetime.datetime.now()))
-    #             db.commit()
-    
-    #     # Detect spoofing for each ICAO address
-    # for icao_address, average_tdoa_values in icao_delta_tdoa.items():
-    #     if len(average_tdoa_values) >= 2:
-    #         if detect_spoofing(average_tdoa_values, threshold_percent=0.01):
-    #             print(f"Spoofing detected for ICAO address: {icao_address}")
-    #         else:
-    #             print(f"No spoofing detected")
-    #             # Perform further actions if spoofing is detected
-    
+    cursor = conn.cursor()    
     hex_values_data = retrieve_delta_tdoa()
 
-    # Modify the structure of hex_values_data
     formatted_hex_values_data = [{'ID': icao_and_tdoa[0], 'icao_address': icao_and_tdoa[1], 'average_tdoa': icao_and_tdoa[2]} for icao_and_tdoa in hex_values_data]
     cursor.close()
     return render_template('tdoa_table.html', hex_values_data=formatted_hex_values_data)
 
-def detect_spoofing(average_tdoa_values, threshold_percent):
-    # Convert the list to a NumPy array
-    tdoa_array = np.array(average_tdoa_values)
+def check_for_spoofing(tdoa_values):
+    tdoa_array = np.array(tdoa_values)
+    mean_value = np.mean(tdoa_array)
+    std_dev = np.std(tdoa_array)
+    coefficient_of_variation = std_dev / mean_value
     
-    # Calculate the absolute differences between each pair of values
-    diff_matrix = np.abs(tdoa_array[:, None] - tdoa_array)
-    
-    # Calculate the maximum value between each pair of values
-    max_matrix = np.maximum(tdoa_array[:, None], tdoa_array)
-    
-    # Calculate the percentage differences
-    percentage_diff_matrix = diff_matrix / max_matrix
-    
-    # Set the diagonal elements to a value greater than the threshold to exclude them from consideration
-    np.fill_diagonal(percentage_diff_matrix, threshold_percent + 1)
-    
-    # Check if any percentage difference exceeds the threshold
-    if np.any(percentage_diff_matrix > threshold_percent):
-        return False
-    else:
+    # Check if the coefficient of variation is less than 10%
+    if coefficient_of_variation < 50:
         return True
+    else:
+        return False
 
 
 # Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table
@@ -621,9 +548,23 @@ def retrieve_delta_tdoa():
     icao_and_delta_tdoa_values = [(row[0], row[1], row[2]) for row in rows]
     return icao_and_delta_tdoa_values
 
+def get_tdoa_alerts():
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, icao_address, timestamp FROM TDOAAlerts order by id desc")
+    rows = cursor.fetchall()
+    tdoa_alerts = [(row[0], row[1], row[2]) for row in rows]
+
+    return tdoa_alerts
+
 @app.route("/")
 def index():
     return render_template('index.html')
+
+@app.route("/TDOA-Alerts")
+def tdoa_alerts():
+    tdoa_alerts = get_tdoa_alerts()
+    tdoa_alerts = [{'id': alert[0], 'icao_address': alert[1], 'timestamp': alert[2]} for alert in tdoa_alerts]
+    return render_template('tdoa_alerts.html', tdoa_alerts = tdoa_alerts)
 
 @app.route("/ads-b")
 def ads_b():

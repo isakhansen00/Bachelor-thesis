@@ -17,6 +17,9 @@ IF OBJECT_ID('TimestampedHexvalues', 'U') IS NOT NULL
 IF OBJECT_ID('TDOAValues', 'U') IS NOT NULL
     DROP TABLE TDOAValues;
 
+IF OBJECT_ID('TDOAAlerts', 'U') IS NOT NULL
+    DROP TABLE TDOAAlerts;
+
 CREATE TABLE FlightTrips (
     TripID INT PRIMARY KEY IDENTITY(1,1),
     ICAO NVARCHAR(255),
@@ -74,6 +77,14 @@ CREATE TABLE TDOAValues (
     timestamp DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_TDOAValues_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
 );
+
+-- Creating the TDOAAlerts table
+CREATE TABLE TDOAAlerts (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    icao_address NVARCHAR(255),
+    timestamp DATETIME DEFAULT GETDATE(),
+);
+
 
 
 """

@@ -33,9 +33,8 @@ cursor3 = db.cursor()
 cursor4 = db.cursor()
 
 
-flight_data_list = []
 unique_icao_addresses = set()  # Used to keep track of flight trips
-first_time_startup = True
+first_time_startup = True 
 
 # Dictionary to hold device information
 devices = {
@@ -49,10 +48,6 @@ devices = {
         "device_id": "RaspberryPiBodo"
     }
 }
-
-# for row in rows:
-#     flight_data = FlightDataClass(*row)  # Unpack the tuple and create an instance of FlightData
-#     flight_data_list.append(flight_data)
 
 
 def get_new_data_from_staging_table():
@@ -88,7 +83,6 @@ def check_nacp_threshold():
                     insert_trip_id_to_flight_position(icao_address[0])
 
 def process_and_insert_into_main_table(flight_data):
-    #print(unique_icao_addresses)
     cursor3 = db.cursor()  # Initialize cursor here
     if flight_data.icao not in unique_icao_addresses:
         # Insert a new entry into the 'FlightTrips' table with the ICAO address and current timestamp
@@ -110,18 +104,8 @@ def process_and_insert_into_main_table(flight_data):
     WHERE NOT EXISTS (SELECT 1 FROM dbo.FlightTrips WHERE ICAO = ?)
     """, (flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao, flight_data.icao,
           flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao))
-
-
-    # cursor3.execute("""
-    #     INSERT INTO dbo.FlightDataNew (ICAO, Callsign, NACp, TripID)
-    #     SELECT ?, ?, ?, ft.TripID
-    #     FROM dbo.FlightTrips ft
-    #     WHERE ft.ICAO = ?
-    #     """, (flight_data.icao, flight_data.callsign, flight_data.nacp, flight_data.icao))
     db.commit()
     cursor3.close()
-
-    #print(flight_data.callsign)
     
     socketio.emit('new_flight_data', {
         'id': flight_data.id,
@@ -171,7 +155,6 @@ def get_latest_trip_timestamp(icao_address):
 # Returns: None
 def insert_trip_id_to_flight_position(icao_address = None):
     trip_id = get_latest_trip_id(icao_address)
-    #print(trip_id)
     cursor6 = db.cursor()
     cursor6.execute("UPDATE dbo.FlightTripPositions SET TripID = ? WHERE ICAO = ?", (trip_id, icao_address))
     db.commit()
@@ -276,20 +259,11 @@ def get_icao_positions_with_unassigned_trip_id():
 # by adding ICAO addresses for flight trips and positions that are under 5 minutes old,
 # and prints relevant messages based on the outcome.
 def initialize_flight_trips_overview():
-    print("STARTER APP")
-    
     if add_icao_for_positions_under_5_minutes_old_to_set():
         if add_icao_for_trips_under_5_minutes_old_to_set():
-            print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION OG TRIP")
-            #print(unique_icao_addresses)
-        else:
-            print("LAGT TIL FLIGHTTRIPS VED START VIA POSITION")
-            #print(unique_icao_addresses)
+            pass
     elif add_icao_for_trips_under_5_minutes_old_to_set():
-        print("LAGT TIL FLIGHTTRIPS VED START VIA TRIP")
-        #print(unique_icao_addresses)
-    else:
-        print("INGEN VERDIER Å LEGGE TIL FRA START")
+        pass
 
 # Function to periodically check and remove stale entries from flight_data
 # This function iterates through the set of unique ICAO addresses, 
@@ -300,14 +274,12 @@ def check_stale_entries():
     while True:
         # Check if the set of unique ICAO addresses is empty
         if not unique_icao_addresses:
-            print("VENT")
             # If the set is empty, wait for 1 minute before checking again
             time.sleep(60)
             continue
 
         current_time = time.time()
         stale_threshold = 300  # 5 minutes in seconds
-        print("KJØR")
 
         # Copy the set to avoid modification during iteration
         icao_addresses_copy = unique_icao_addresses.copy()
@@ -317,45 +289,30 @@ def check_stale_entries():
             latest_position_timestamp = get_latest_position_timestamp(icao_address)
             # If position older than 5 minutes, remove the ICAO address from the set
             if latest_position_timestamp is not None:
-                print(current_time)
-                print(f"latest position timestamp: {latest_position_timestamp} of type {type(latest_position_timestamp)}")
-                #print(unique_icao_addresses)
                 if current_time - float(latest_position_timestamp) > stale_threshold:
                     unique_icao_addresses.remove(icao_address)
-                    print("FJERNET VIA POSITION")
-                    #print(unique_icao_addresses)
             # If position data is not available, check for trip timestamp
             else:
                 latest_trip_timestamp = get_latest_trip_timestamp(icao_address)
-                print(f"latest trip timestamp: {latest_trip_timestamp} of type {type(latest_trip_timestamp)}")
-                #print(unique_icao_addresses)
                 # If trip data is available and older than 5 minutes, remove the ICAO address from the set
                 if latest_trip_timestamp is not None:
-                    print(current_time)
                     if current_time - int(latest_trip_timestamp) > stale_threshold:
-                        unique_icao_addresses.remove(icao_address)
-                        print("FJERNET VIA TRIP")
-                        
+                        unique_icao_addresses.remove(icao_address)      
 
         # Wait for 1 minute before checking again
         time.sleep(60)
 
-
-
 def calculate_TDoA(signal_arrival_times):
-    # Calculate time differences between sensors
     time_diffs = {}
-    processed_pairs = set()  # Keep track of processed sensor pairs
+    processed_pairs = set()
     
     for sensor1, time1 in signal_arrival_times.items():
         for sensor2, time2 in signal_arrival_times.items():
             if sensor1 != sensor2 and (sensor1, sensor2) not in processed_pairs and (sensor2, sensor1) not in processed_pairs:
-                # Convert nanoseconds to seconds with decimals
-                time_diff_seconds = abs((time1 - time2))  # Ensure positive time difference
+                time_diff_seconds = abs((time1 - time2))
                 time_diffs[(sensor1, sensor2)] = time_diff_seconds
                 processed_pairs.add((sensor1, sensor2))
     
-    # Sort and select the top three time differences
     top_three_diffs = dict(sorted(time_diffs.items(), key=lambda item: item[1], reverse=True)[:3])
     
     return top_three_diffs
@@ -370,8 +327,7 @@ This function will be used for continously checking for spoofing and updating ta
 def check_for_spoofing_continously():
     icao_delta_tdoa = {}
     cursor = conn.cursor()
-    print("heisann")
-    hex_value_groups = {}  # Dictionary to store groups of records by hex value
+    hex_value_groups = {}
     update_statement = """
         UPDATE TimestampedHexvalues 
         SET isprocessed = 1 
@@ -382,7 +338,6 @@ def check_for_spoofing_continously():
         new_timestamped_hex_values = get_new_timestamped_hex_values()
         cursor = conn.cursor()
         if new_timestamped_hex_values:
-            # Batch updates
             batch_updates = []
             for row in new_timestamped_hex_values:
                 hex_value, device_id, arrival_time = row
@@ -390,22 +345,17 @@ def check_for_spoofing_continously():
                 if hex_value not in hex_value_groups:
                     hex_value_groups[hex_value] = {'arrival_times': {}}
                 hex_value_groups[hex_value]['arrival_times'][device_id] = arrival_time
-            # Execute batch updates in a single transaction
             try:
                 with conn.cursor() as cursor:
                     cursor.executemany(update_statement, batch_updates)
                     conn.commit()
             except Exception as e:
-                conn.rollback()  # Rollback transaction on error
+                conn.rollback()
                 print("Error:", e)
 
-            #print(hex_value_groups)
-
-            icao_and_hex_values = {}  # Dictionary to store hex values for each ICAO address
+            icao_and_hex_values = {}
             for hex_value, group_data in hex_value_groups.items():
                 icao_address = mps.adsb.icao(hex_value)
-                #print(icao_address)
-                #print(group_data)
                 if icao_address:
                     icao_and_hex_values.setdefault(icao_address, []).append(group_data)
 
@@ -414,21 +364,17 @@ def check_for_spoofing_continously():
                 for hex_value_data in hex_values:
                     group_data = hex_value_data['arrival_times']
                     time_diffs = []
-                    if len(group_data) >= 2:  # Only process groups with at least 3 different device IDs
-                        #print(hex_value)
+                    if len(group_data) >= 2:
                         for _, time_diff in calculate_TDoA(group_data).items():
                             time_diffs.append(time_diff)
-                        if time_diffs:  # Only calculate average TDoA if there are time differences
+                        if time_diffs:
                             average_tdoa = round(sum(time_diffs) / len(time_diffs))
                             hex_values_data.append({'icao_address': icao_address, 'average_tdoa': average_tdoa})
-
-                            # Store delta_tdoa values for each icao_address
                         if icao_address in icao_delta_tdoa:
                             icao_delta_tdoa[icao_address].append(average_tdoa)
                         else:
                             icao_delta_tdoa[icao_address] = [average_tdoa]
 
-            # Insert data into the Delta_TDOA table
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
                 if icao_address not in unique_icao_addresses:
                     cursor = conn.cursor()
@@ -437,14 +383,8 @@ def check_for_spoofing_continously():
                     conn.commit()
                 
                 for average_tdoa in average_tdoa_values:
-
-                    # if icao_address not in unique_icao_addresses:
-                    #     cursor = conn.cursor()
-                    #     cursor.execute("INSERT INTO dbo.FlightTrips (ICAO, TripTimestamp) VALUES (%s, %s)", (icao_address, time.time()))
-                    #     unique_icao_addresses.add(icao_address)  # Add the ICAO address to the set of unique ICAO addresses
                     print(len(average_tdoa_values))
                     if len(average_tdoa_values) >= 2:
-                        # Insert flight data into the 'FlightDataNew' table
                         cursor.execute("""
                         INSERT INTO dbo.TDOAValues (icao_address, average_tdoa, timestamp, TripID)
                         SELECT %s, %s, %s, ft.TripID
@@ -456,22 +396,16 @@ def check_for_spoofing_continously():
                         WHERE NOT EXISTS (SELECT 1 FROM dbo.FlightTrips WHERE ICAO = %s)
                         """, (icao_address, average_tdoa, datetime.datetime.now(), icao_address, icao_address,
                         icao_address, average_tdoa, datetime.datetime.now(), icao_address))
-
-                    # cursor.execute("INSERT INTO TDOAValues (icao_address, average_tdoa, timestamp) VALUES (%s, %s, %s)", 
-                        #            (icao_address, average_tdoa, datetime.datetime.now()))
                         conn.commit()
                         socketio.emit('new_tdoa_data', {
                         'icao_address': icao_address,
                         'average_tdoa': average_tdoa
                     })
                     
-            
-                # Detect spoofing for each ICAO address
             for icao_address, average_tdoa_values in icao_delta_tdoa.items():
                 if len(average_tdoa_values) >= 2:
                     if check_for_spoofing(tdoa_values=average_tdoa_values):
                         timestamp = datetime.datetime.now()
-                        print(f"Spoofing detected for ICAO address: {icao_address}")
                         cursor.execute("INSERT INTO dbo.TDOAAlerts (icao_address, timestamp) VALUES (%s, %s)", (icao_address, timestamp))
                         socketio.emit('spoofing_alert', {'icao_address': icao_address})
                         
@@ -479,26 +413,16 @@ def check_for_spoofing_continously():
                         'icao_address': icao_address,
                         'timstamp': timestamp
                     })
-                    else:
-                        print(f"No spoofing detected")
-            
-            #hex_values_data = retrieve_delta_tdoa()
-            #formatted_hex_values_data = [{'icao_address': icao_and_tdoa[0], 'average_tdoa': icao_and_tdoa[1]} for icao_and_tdoa in hex_values_data]
 
         else:
             try:
                 unassigned_icao_addresses = get_icao_positions_with_unassigned_trip_id()
-                #print(unassigned_icao_addresses)
                 if unassigned_icao_addresses:
-                    #print(unassigned_icao_addresses)
                     for icao_address in unassigned_icao_addresses:
-                        print(icao_address[0])
                         insert_trip_id_to_flight_position(icao_address[0])
             except:
                 continue
-            print("No new values to process")
 
-        #cursor.close()
         socketio.sleep(15)
 
 
@@ -522,7 +446,6 @@ def get_new_timestamped_hex_values():
 def tdoa_table():
     cursor = conn.cursor()    
     hex_values_data = retrieve_delta_tdoa()
-
     formatted_hex_values_data = [{'ID': icao_and_tdoa[0], 'icao_address': icao_and_tdoa[1], 'average_tdoa': icao_and_tdoa[2]} for icao_and_tdoa in hex_values_data]
     cursor.close()
     return render_template('tdoa_table.html', hex_values_data=formatted_hex_values_data)
@@ -533,14 +456,11 @@ def check_for_spoofing(tdoa_values):
     std_dev = np.std(tdoa_array)
     coefficient_of_variation = std_dev / mean_value
     
-    # Check if the coefficient of variation is less than 10%
     if coefficient_of_variation < 50:
         return True
     else:
         return False
 
-
-# Function to retrieve delta_tdoa values for a given icao_id from the Delta_TDOA table
 def retrieve_delta_tdoa():
     cursor = db.cursor()
     cursor.execute("SELECT id, icao_address, average_tdoa FROM TDOAValues order by id desc")
@@ -601,10 +521,7 @@ def get_flight_map():
         cursor7.execute("SELECT TripID FROM FlightDataNew WHERE ID = ?", (flight_id,))
     except:
         pass
-    # try:
-    #     cursor7.execute("SELECT TripID FROM TDOAValues WHERE ID = ?", (flight_id,))
-    # except:
-    #     pass
+
     row = cursor7.fetchone()
     if row:
         trip_id = row[0]
@@ -650,11 +567,10 @@ async def get_status_sensors():
 def status_sensors():
     return render_template('sensor_status.html')
 
-
-
 thread_for_nacp_threshold = None
 thread_for_stale_entries = None
 thread_for_spoofing_check = None
+
 """
 Decorator for connect
 """
@@ -672,14 +588,6 @@ def connect():
             thread_for_stale_entries = socketio.start_background_task(check_stale_entries)         
         if thread_for_spoofing_check is None:
             thread_for_spoofing_check = socketio.start_background_task(check_for_spoofing_continously)
-            print("spoof")
-
-"""
-Decorator for disconnect
-"""
-# @socketio.on('disconnect')
-# def disconnect():
-#     print('Client disconnected',  request.sid)
 
 if __name__=="__main__":
     if first_time_startup:

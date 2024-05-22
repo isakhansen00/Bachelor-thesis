@@ -1,7 +1,8 @@
 from azure.iot.hub import IoTHubRegistryManager
+from credentials import *
 
 # Connection string for the IoT Hub service shared access policy
-CONNECTION_STRING = "HostName=RaspberryPiHubGruppe24.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=5R/rIBxvhyOJVoJ+rg2xsklVz8GrZAvK0AIoTHUDvKQ="
+CONNECTION_STRING = connection_string_shared_access_policy
 
 # Asynchronous function to get the status of a device
 async def get_sensor_status(device_id):

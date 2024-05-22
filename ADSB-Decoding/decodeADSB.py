@@ -8,9 +8,7 @@ from fetch_airplane_data import fetch_airplane_data
 import os
 
 hex_values_dict = {}
-
 conn_str = str(os.getenv("CONNECTION_STRING"))
-MSG_SND = ''
 client = IoTHubDeviceClient.create_from_connection_string(conn_str)
  
 def read_dump1090_raw():
@@ -20,15 +18,14 @@ def read_dump1090_raw():
         hex_value = line.strip()
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
-        print("Received ADS-B signal:", hex_value)
-        icao_address = mps.adsb.icao(hex_value)  # Extract ICAO address
+        icao_address = mps.adsb.icao(hex_value)
         if icao_address is not None:
-            hex_values_dict.setdefault(icao_address, []).append(hex_value)  # Accumulate hex values for the ICAO address
-            process_hex_values(icao_address)  # Process newly appended hex values for the ICAO address
+            hex_values_dict.setdefault(icao_address, []).append(hex_value)
+            process_hex_values(icao_address)
+
 
 def process_hex_values(icao_address):
     hex_values = hex_values_dict.get(icao_address, [])
-    print(f"Processing hex values for ICAO address {icao_address}")
     last_processed_index = getattr(process_hex_values, f"last_index_{icao_address}", 0)
     new_hex_values = hex_values[last_processed_index:]
     
@@ -39,8 +36,6 @@ def process_hex_values(icao_address):
         
         try:
             nac_p = mps.decoder.adsb.nac_p(hex_value)
-            if nac_p[0] < 8:
-                print(f"Potential jamming detected. NACp is: {nac_p[0]}")
         except RuntimeError:
             pass
         
@@ -59,18 +54,14 @@ def process_hex_values(icao_address):
             "NACp": nac_p[0]
         }
         message = json.dumps(message_data)
-        print(f"Message: {message}")
-        # Send message to Azure IoT Hub
         client.send_message(message)
 
-        if nac_p[0] < 10:
-            print(f"Potential jamming of flight {flight_callsign} detected. NACp is: {nac_p[0]}")
+
         setattr(process_hex_values, f"last_index_{icao_address}", len(hex_values))  # Update last processed index
 
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
-    #dump_thread.join()
 
 
 
@@ -106,6 +97,4 @@ if __name__ == "__main__":
                 # Send message to Azure IoT Hub
                 client.send_message(message)
 
-                # Print sent message for debugging (optional)
-                print(f"Message sent: {message}")
         time.sleep(10)  # Sleep for 10 seconds before fetching again

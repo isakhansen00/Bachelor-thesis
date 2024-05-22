@@ -167,6 +167,13 @@ $(document).ready(function() {
         alert(`Alert: Flight ${data.callsign} has a NACp value of ${data.nacp}`);
         console.log(`Alert: Flight has a NACp value of`);
     });
+
+    socket.on('spoofing_alert', function(data) {
+        // Display alert for potential spoofing of flight
+        alert(`Alert: Potential spoofing of flight with ICAO: ${data.icao_address} `);
+
+    });
+    
 });
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -13,9 +13,7 @@ hex_values_dict = {}
 # Read device identifier from environment variable
 DEVICE_ID = os.getenv("DEVICE_ID")
 
-#CONNECTION_STRING = f"HostName=RaspberryPiSDRHub.azure-devices.net;DeviceId={DEVICE_ID};SharedAccessKey=Z3FE1PNea9Oz/xo8ofj4vMRpMDlwJCUmJAIoTN1a+QY="
 CONNECTION_STRING = os.getenv("CONNECTION_STRING")
-print(CONNECTION_STRING)
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 
 def read_dump1090_raw():
@@ -27,23 +25,18 @@ def read_dump1090_raw():
         hex_value = hex_value.replace("*", "")
         hex_value = hex_value.replace(";", "")
         icao_address = mps.adsb.icao(hex_value)
-        if icao_address is not None:
-            
-            timestamp2 = time.time_ns()
-            print((timestamp2-timestamp)/1e9)
-        send_to_iot_hub(hex_value, timestamp)
+        send_to_iot_hub(hex_value, timestamp, icao_address)
 
 
-def send_to_iot_hub(hex_value, timestamp):
+def send_to_iot_hub(hex_value, timestamp, icao_address):
     print("test")
     message_data = {
         "hex_value": hex_value,
-        "icao_address": 123,
+        "icao_address": icao_address,
         "hex_timestamp": timestamp,
-        "device_id": DEVICE_ID  # Include device identifier in the message
+        "device_id": DEVICE_ID
     }
     message = json.dumps(message_data)
-    print(f"Sending message to Azure IoT Hub: {hex_value}, {timestamp}")
     client.send_message(message)
 
 
@@ -51,7 +44,6 @@ def send_to_iot_hub(hex_value, timestamp):
 if __name__ == "__main__":
     dump_thread = threading.Thread(target=read_dump1090_raw)
     dump_thread.start()
-    #dump_thread.join()
 
 
 
@@ -87,6 +79,4 @@ if __name__ == "__main__":
                 # Send message to Azure IoT Hub
                 client.send_message(message)
 
-                # Print sent message for debugging (optional)
-                print(f"Message sent: {message}")
         time.sleep(10)  # Sleep for 10 seconds before fetching again

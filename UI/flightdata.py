@@ -1,5 +1,3 @@
-
-
 class FlightDataClass():
     def __init__(self, id, icao, callsign, nacp):
         self.id = id

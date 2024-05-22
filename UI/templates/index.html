@@ -3,37 +3,45 @@
 {% block content %}
 
 <div class="card bg-primary" style="margin-top: 20px;">
-    <div class="row" style="margin-left: auto; margin-right: auto;">
-    <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
-        <div class="card-body">
-          <h5 class="card-title">ADS-B</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="{{ url_for('ads_b') }}" class="btn btn-primary">See ADS-B table</a>
-        </div>
+  <div class="row" style="margin-left: auto; margin-right: auto;">
+      <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
+          <div class="card-body d-flex flex-column">
+              <h5 class="card-title">ADS-B</h5>
+              <p class="card-text">This page will show a table of all the NACp values of a certain callsign and if it might have been affected by jamming</p>
+              <a href="{{ url_for('ads_b') }}" class="btn btn-primary mt-auto">See ADS-B table</a>
+          </div>
       </div>
 
       <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
-        <div class="card-body">
-          <h5 class="card-title">TDOA</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="{{ url_for('tdoa_alerts') }}" class="btn btn-primary">See TDOA table</a>
-        </div>
+          <div class="card-body d-flex flex-column">
+              <h5 class="card-title">TDOA</h5>
+              <p class="card-text">This page will show a table of all the TDOA Alarms that will show potential spoofing of ADS-B signals.</p>
+              <a href="{{ url_for('tdoa_alerts') }}" class="btn btn-primary mt-auto">See TDOA table</a>
+          </div>
       </div>
 
       <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
-        <div class="card-body">
-          <h5 class="card-title">Sensor Status</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="{{ url_for('status_sensors') }}" class="btn btn-primary">See sensor status</a>
-        </div>
+          <div class="card-body d-flex flex-column">
+              <h5 class="card-title">Sensor Status</h5>
+              <p class="card-text">This page shows whether each sensor is connected or disconnected.</p>
+              <a href="{{ url_for('status_sensors') }}" class="btn btn-primary mt-auto">See sensor status</a>
+          </div>
       </div>
-    </div>
+  </div>
 </div>
 
 <script>
   $(document).ready(function() {
       // WebSocket connection for NACp alerts
       var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+
+      socket.on('spoofing_alert', function(data) {
+        // Display alert for potential spoofing of flight
+        alert(`Alert: Potential spoofing of flight with ICAO: ${data.icao_address} `);
+
+    });
+    
   });
   </script>
 

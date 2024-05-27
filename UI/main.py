@@ -111,7 +111,8 @@ def process_and_insert_into_main_table(flight_data):
         'id': flight_data.id,
         'icao': flight_data.icao,
         'callsign': flight_data.callsign,
-        'nacp': flight_data.nacp
+        'nacp': flight_data.nacp,
+        'date': str(datetime.date.today())
     })
 
 # Retrieves the latest trip ID associated with a given ICAO address from the FlightTrips table in the database.
@@ -489,7 +490,7 @@ def tdoa_alerts():
 @app.route("/ads-b")
 def ads_b():
     cursor4 = db.cursor()
-    cursor4.execute("SELECT ID, ICAO, Callsign, NACp FROM dbo.FlightDataNew order by ID DESC")
+    cursor4.execute("SELECT ID, ICAO, Callsign, NACp, CurrentDate FROM dbo.FlightDataNew order by ID DESC")
 
     rows = cursor4.fetchall()
 

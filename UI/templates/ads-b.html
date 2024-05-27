@@ -32,6 +32,7 @@
                 <th class="sortable" data-sort="icao">ICAO</th>
                 <th class="sortable" data-sort="callsign">Callsign</th>
                 <th class="sortable" data-sort="nacp">NACp</th>
+                <th class="sortable" data-sort="nacp">Date</th>
                 <th class="sortable" data-sort="warning"><svg id="svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
                     <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
                     <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
@@ -40,14 +41,14 @@
         </thead>
         <tbody>
             {% for flight_data in flight_data_list %}
-                {% if flight_data.nacp < 9 %}
+                {% if flight_data.nacp < 11 %}
                 <tr class="table-danger" data-toggle="modal" data-target="#myModal" id="warningid" 
                 data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
-                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
-                    <td>{{ flight_data.id }}</td>
+                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}" data-flight-date="{{ flight_data.currentdate }}">
                     <td>{{ flight_data.icao }}</td>
                     <td>{{ flight_data.callsign }}</td>
                     <td>{{ flight_data.nacp }}</td>
+                    <td>{{ flight_data.currentdate }}</td>
                     <td><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
                         <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
                         <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
@@ -56,11 +57,12 @@
                 {% else %}
                 <tr data-toggle="modal" data-target="#myModal" 
                 data-flight-id="{{ flight_data.id }}" data-flight-icao="{{ flight_data.icao }}" 
-                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}">
+                data-flight-callsign="{{ flight_data.callsign }}" data-flight-nacp="{{ flight_data.nacp }}" data-flight-date="{{ flight_data.currentdate }}">
                     <td>{{ flight_data.id }}</td>
                     <td>{{ flight_data.icao }}</td>
                     <td>{{ flight_data.callsign }}</td>
                     <td>{{ flight_data.nacp }}</td>
+                    <td>{{ flight_data.currentdate }}</td>
                     <td style="border: none;"></td>
                 </tr>
                 {% endif %}
@@ -108,7 +110,7 @@
         function colorTable() {
             $('#flight-table tbody tr').each(function() {
                 var nacpValue = parseInt($(this).find('td').eq(3).text()); // Assuming NACp value is in the fourth column (index 3)
-                if (nacpValue < 9) {
+                if (nacpValue < 11) {
                     $(this).addClass('table-danger');
                 } else {
                     $(this).removeClass('table-danger');
@@ -130,12 +132,14 @@
             var cell2 = newRow.insertCell(1);
             var cell3 = newRow.insertCell(2);
             var cell4 = newRow.insertCell(3);
+            var cell5 = newRow.insertCell(4);
     
             // Add data to the cells
             cell1.innerHTML = data.id;
             cell2.innerHTML = data.icao;
             cell3.innerHTML = data.callsign;
             cell4.innerHTML = data.nacp;
+            cell5.innerHTML = data.date;
 
             // Rebind click event listener for new rows
             $(newRow).attr({

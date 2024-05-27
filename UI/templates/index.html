@@ -6,7 +6,7 @@
   <div class="row" style="margin-left: auto; margin-right: auto;">
       <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
           <div class="card-body d-flex flex-column">
-              <h5 class="card-title">ADS-B</h5>
+              <h5 class="card-title">ADS-B Data</h5>
               <p class="card-text">This page will show a table of all the NACp values of a certain callsign and if it might have been affected by jamming</p>
               <a href="{{ url_for('ads_b') }}" class="btn btn-primary mt-auto">See ADS-B table</a>
           </div>
@@ -14,7 +14,7 @@
 
       <div class="card" style="width: 16rem; margin-top: 20px; margin-bottom: 20px; margin-left: 5px;">
           <div class="card-body d-flex flex-column">
-              <h5 class="card-title">TDOA</h5>
+              <h5 class="card-title">TDOA Alarms</h5>
               <p class="card-text">This page will show a table of all the TDOA Alarms that will show potential spoofing of ADS-B signals.</p>
               <a href="{{ url_for('tdoa_alerts') }}" class="btn btn-primary mt-auto">See TDOA table</a>
           </div>

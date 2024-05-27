@@ -27,6 +27,7 @@ CREATE TABLE FlightDataNew (
     Callsign NVARCHAR(255),
     NACp NVARCHAR(255),
     TripID INT,
+    CurrentDate DATE NULL,
     isprocessed BIT DEFAULT 0,
     CONSTRAINT FK_FlightData_TripID FOREIGN KEY (TripID) REFERENCES FlightTrips(TripID)
 );

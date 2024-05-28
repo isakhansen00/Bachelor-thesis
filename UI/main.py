@@ -457,7 +457,7 @@ def check_for_spoofing(tdoa_values):
     std_dev = np.std(tdoa_array)
     coefficient_of_variation = std_dev / mean_value
     
-    if coefficient_of_variation < 50:
+    if coefficient_of_variation < 0.1:
         return True
     else:
         return False
